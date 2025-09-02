@@ -5,7 +5,18 @@ import os
 # Adicionar o diretório pai ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from busca_local.config import SUPABASE_URL, SUPABASE_KEY, SUPABASE_TABLE
+# Imports robustos
+try:
+    from config import SUPABASE_URL, SUPABASE_KEY, SUPABASE_TABLE
+except ImportError:
+    try:
+        from .config import SUPABASE_URL, SUPABASE_KEY, SUPABASE_TABLE
+    except ImportError as e:
+        print(f"⚠️ Erro ao importar configurações do Supabase: {e}")
+        # Definir valores padrão para evitar falhas
+        SUPABASE_URL = None
+        SUPABASE_KEY = None
+        SUPABASE_TABLE = "produtos"
 
 # Imports para Supabase
 try:

@@ -5,8 +5,17 @@ from groq import Groq
 from typing import Dict, Any
 from enum import Enum
 
-from models import DecompositionResult
-from utils import validate_and_fix_result, create_fallback_decomposition
+# Imports robustos
+try:
+    from models import DecompositionResult
+    from utils import validate_and_fix_result, create_fallback_decomposition
+except ImportError:
+    try:
+        from .models import DecompositionResult
+        from .utils import validate_and_fix_result, create_fallback_decomposition
+    except ImportError as e:
+        print(f"⚠️ Erro ao importar módulos locais no decomposer: {e}")
+        raise
 
 class SolutionDecomposer:
     def __init__(self, groq_api_key: str):

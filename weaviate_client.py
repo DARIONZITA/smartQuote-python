@@ -7,11 +7,19 @@ import sys
 import os
 import numpy as np
 
-# Adicionar o diretório pai ao path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-from busca_local.config import WEAVIATE_HOST, WEAVIATE_PORT, API_KEY_WEAVIATE
+# Importar configurações usando try/except para robustez
+try:
+    from config import WEAVIATE_HOST, WEAVIATE_PORT, API_KEY_WEAVIATE
+except ImportError:
+    # Fallback para import relativo
+    try:
+        from .config import WEAVIATE_HOST, WEAVIATE_PORT, API_KEY_WEAVIATE
+    except ImportError:
+        # Último recurso: definir valores padrão
+        print("⚠️ Aviso: Não foi possível importar configurações do Weaviate. Usando valores padrão.")
+        WEAVIATE_HOST = "localhost"
+        WEAVIATE_PORT = 8080
+        API_KEY_WEAVIATE = None
 
 warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf")
 warnings.filterwarnings("ignore", category=DeprecationWarning)

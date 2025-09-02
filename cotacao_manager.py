@@ -1,6 +1,15 @@
 from typing import Dict, Any, List, Optional
-from busca_local.config import API_BASE_URL
 import requests
+
+# Import robusto da configuração
+try:
+    from config import API_BASE_URL
+except ImportError:
+    try:
+        from .config import API_BASE_URL
+    except ImportError:
+        print("⚠️ Erro ao importar API_BASE_URL. Usando valor padrão.")
+        API_BASE_URL = "http://localhost:3001"
 
 class CotacaoManager:
     def __init__(self, supabase_manager):

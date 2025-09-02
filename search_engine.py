@@ -10,12 +10,23 @@ from groq import Groq
 # Adicionar o diretório pai ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
-from busca_local.text_utils import (
-    normalize_text, expand_query_with_synonyms, preprocess_termos, 
-    _detectar_especificidade
-)
-from busca_local.config import CATEGORY_EQUIV, STOPWORDS_PT, GROQ_API_KEY
+# Imports robustos
+try:
+    from text_utils import (
+        normalize_text, expand_query_with_synonyms, preprocess_termos, 
+        _detectar_especificidade
+    )
+    from config import CATEGORY_EQUIV, STOPWORDS_PT, GROQ_API_KEY
+except ImportError:
+    try:
+        from .text_utils import (
+            normalize_text, expand_query_with_synonyms, preprocess_termos, 
+            _detectar_especificidade
+        )
+        from .config import CATEGORY_EQUIV, STOPWORDS_PT, GROQ_API_KEY
+    except ImportError as e:
+        print(f"⚠️ Erro ao importar módulos locais: {e}")
+        raise
 
 
 def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict | None, rigor: int | None, candidatos: List[Dict[str, Any]]) -> Dict[str, Any]:

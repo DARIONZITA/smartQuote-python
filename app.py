@@ -18,17 +18,34 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
 
 # IMPORTANTE: Carregar .env LOCAL antes de qualquer import que use variáveis
-from config import load_env
-load_env()  # Carrega .env do diretório busca_local
-
-# Imports dos módulos locais (agora com variáveis carregadas)
-from config import LIMITE_PADRAO_RESULTADOS, LIMITE_MAXIMO_RESULTADOS, GROQ_API_KEY
-from weaviate_client import WeaviateManager
-from supabase_client import SupabaseManager
-from search_engine import buscar_hibrido_ponderado, _llm_escolher_indice
-from query_builder import gerar_estrutura_de_queries
-from cotacao_manager import CotacaoManager
-from decomposer import SolutionDecomposer
+try:
+    from config import load_env
+    load_env()  # Carrega .env do diretório busca_local
+    
+    # Imports dos módulos locais (agora com variáveis carregadas)
+    from config import LIMITE_PADRAO_RESULTADOS, LIMITE_MAXIMO_RESULTADOS, GROQ_API_KEY
+    from weaviate_client import WeaviateManager
+    from supabase_client import SupabaseManager
+    from search_engine import buscar_hibrido_ponderado, _llm_escolher_indice
+    from query_builder import gerar_estrutura_de_queries
+    from cotacao_manager import CotacaoManager
+    from decomposer import SolutionDecomposer
+except ImportError:
+    try:
+        from .config import load_env
+        load_env()  # Carrega .env do diretório busca_local
+        
+        # Imports dos módulos locais (agora com variáveis carregadas)
+        from .config import LIMITE_PADRAO_RESULTADOS, LIMITE_MAXIMO_RESULTADOS, GROQ_API_KEY
+        from .weaviate_client import WeaviateManager
+        from .supabase_client import SupabaseManager
+        from .search_engine import buscar_hibrido_ponderado, _llm_escolher_indice
+        from .query_builder import gerar_estrutura_de_queries
+        from .cotacao_manager import CotacaoManager
+        from .decomposer import SolutionDecomposer
+    except ImportError as e:
+        print(f"⚠️ Erro crítico ao importar módulos: {e}")
+        raise
 
 warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf")
 warnings.filterwarnings("ignore", category=DeprecationWarning)

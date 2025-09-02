@@ -7,7 +7,16 @@ import os
 # Adicionar o diretório pai ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from busca_local.config import SYNONYMS, STOPWORDS_PT
+# Import robusto das configurações
+try:
+    from config import SYNONYMS, STOPWORDS_PT
+except ImportError:
+    try:
+        from .config import SYNONYMS, STOPWORDS_PT
+    except ImportError:
+        print("⚠️ Erro ao importar configurações. Usando valores padrão.")
+        SYNONYMS = {}
+        STOPWORDS_PT = set()
 
 # normalização sem dependências externas pesadas; usa unidecode se existir
 try:
