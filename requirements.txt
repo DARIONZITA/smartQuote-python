@@ -8,9 +8,11 @@ typing-extensions>=4.0.0
 
 # Machine Learning and AI
 weaviate-client>=4.0.0
+weaviate>=4.0.0
 gradio-client>=0.8.0
 instructor>=1.0.0
 groq>=0.4.0
+numpy>=1.24.0
 
 # Database
 supabase>=2.0.0
@@ -18,6 +20,9 @@ supabase>=2.0.0
 # Text processing
 unidecode>=1.3.0
 PyYAML>=6.0
+
+# HTTP requests
+requests>=2.31.0
 
 # Logging and utilities
 python-dotenv>=1.0.0
