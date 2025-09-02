@@ -425,6 +425,7 @@ def buscar_hibrido_ponderado(client: weaviate.WeaviateClient, modelos: dict, que
                 'descricao': p.get('descricao'),
                 'preco': p.get('preco', 0),
                 'estoque': p.get('estoque', 0),
+                'origem': p.get('origem', 'local'),
                 'score': score_hibrido,
                 'score_semantico': score_semantico,
                 'score_textual': score_textual,

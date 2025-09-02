@@ -139,6 +139,10 @@ def executar_estrutura_de_queries(
     ids_por_tipo: Dict[str, str] = {q["id"]: q.get("tipo", "") for q in estrutura}
     item_ids: List[str] = [q["id"] for q in estrutura if q.get("tipo") == "item"]
 
+    # Verificar se Q0 e Q1 têm resultados
+    has_q0 = bool(resultados_por_query.get("Q0"))
+    has_q1 = bool(resultados_por_query.get("Q1"))
+
     # Considerar somente itens (Q1..QN) para determinar faltantes
     missing_items: List[str] = [qid for qid in item_ids if not resultados_por_query.get(qid)]
     faltando: List[str] = missing_items
@@ -149,8 +153,6 @@ def executar_estrutura_de_queries(
             for qid in faltando:
                 logger.info(f"  - {qid}")
         else:
-            has_q0 = bool(resultados_por_query.get("Q0"))
-            has_q1 = bool(resultados_por_query.get("Q1"))
             if (has_q0 or has_q1) and not missing_items:
                 logger.info("✅ Todas as queries principais encontraram resultados!")
 
@@ -327,13 +329,26 @@ def processar_interpretacao(
                 for produto in lista_q:
                     produto_id = produto.get("produto_id")
                     if produto_id and produto_id not in produtos_principais:
-                        sucesso = cotacao_manager.insert_item_cotacao(
+                        # Preparar payload similar ao main.py
+                        payload = {
+                            "query_id": qid, 
+                            "score": produto.get("score"), 
+                            "alternativa": False
+                        }
+                        
+                        # Se o produto foi aprovado pelo LLM, incluir o relatório
+                        if produto.get('llm_relatorio'):
+                            payload["llm_relatorio"] = produto.get('llm_relatorio')
+                        
+                        item_id = cotacao_manager.insert_cotacao_item_from_result(
                             cotacao_id=cotacao1_id,
+                            resultado_produto=produto,
+                            origem=produto.get("origem", "local"),
                             produto_id=produto_id,
+                            payload=payload,
                             quantidade=meta_por_id.get(qid, {}).get("quantidade", 1),
-                            observacoes=f"Auto-adicionado de {qid}"
                         )
-                        if sucesso:
+                        if item_id:
                             itens_adicionados += 1
                             produtos_principais.add(produto_id)
 

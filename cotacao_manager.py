@@ -240,7 +240,7 @@ class CotacaoManager:
             return None
 
         origem_norm = str(origem or "").lower()
-        if origem_norm not in {"local", "api", "web"}:
+        if origem_norm not in {"local", "api", "externO"}:
             print("⚠️ Origem inválida. Use 'local', 'api' ou 'web'.")
             return None
 
