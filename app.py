@@ -591,24 +591,21 @@ def initialize_services():
 
 if __name__ == '__main__':
     try:
-        # Inicializar serviços
         initialize_services()
         
-        # Configurações do servidor
-        port = int(os.environ.get('PYTHON_API_PORT', 5001))
-        host = os.environ.get('PYTHON_API_HOST', '127.0.0.1')
+        # Se estiver no Render, ele define $PORT. Caso contrário, use suas variáveis locais
+        port = int(os.environ.get('PORT', os.environ.get('PYTHON_API_PORT', 5001)))
+        host = '0.0.0.0' if 'PORT' in os.environ else os.environ.get('PYTHON_API_HOST', '127.0.0.1')
         debug = os.environ.get('PYTHON_API_DEBUG', 'false').lower() == 'true'
         
         logger.info(f"🌐 Iniciando API Python em {host}:{port}")
         
-        # Iniciar servidor Flask
         app.run(
             host=host,
             port=port,
             debug=debug,
             threaded=True
-        )
-        
+        )    
     except KeyboardInterrupt:
         logger.info("🛑 Servidor interrompido pelo usuário")
     except Exception as e:
