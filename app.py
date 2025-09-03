@@ -142,7 +142,22 @@ def executar_estrutura_de_queries(
                 logger.info(f"❌ LLM não encontrou match adequado para {q['id']}")
             else:
                 logger.warning(f"⚠️ Índice LLM inválido: {idx_escolhido} (max: {len(lista)-1})")
-            lista = []
+            
+            # PRESERVAR o relatório LLM mesmo quando nenhum produto é escolhido
+            # Criar um objeto especial para representar a análise rejeitada
+            if relatorio_llm and lista:  # Se houve análise LLM e havia produtos candidatos
+                produto_rejeitado = {
+                    "llm_match": False,
+                    "llm_rejected": True,
+                    "llm_relatorio": relatorio_llm,
+                    "query_id": q["id"],
+                    "status": "rejeitado_por_llm",
+                    "observacao": "Produtos encontrados mas rejeitados pela análise LLM"
+                }
+                # Manter o produto rejeitado para que o relatório seja preservado
+                lista = [produto_rejeitado]
+            else:
+                lista = []
 
         resultados_por_query[q["id"]] = lista
 
@@ -258,18 +273,18 @@ def processar_interpretacao(
             "fonte": fonte,
         }
 
-    # Gerar tarefas para pesquisa web com base nos faltantes
+    # Gerar tarefas para pesquisa web com base nos faltantes (retorno informativo)
     tarefas_web: List[Dict[str, Any]] = []
     for qid, meta in faltantes_meta.items():
         nome = (meta.get("nome") or "").strip()
         categoria = (meta.get("categoria") or "").strip()
         palavras = meta.get("palavras_chave") or []
-        custo_beneficio = meta.get("custo_beneficio") or {} 
+        custo_beneficio = meta.get("custo_beneficio") or {}
         if isinstance(palavras, list):
             palavras_str = " ".join([str(p).strip() for p in palavras if str(p).strip()])
         else:
             palavras_str = str(palavras).strip()
-        base = " ".join([s for s in [nome] if s])
+        base = " ".join([s for s in [nome, categoria, palavras_str] if s])
         # fallback para query original se base ficar vazia
         query_sugerida = base if base else (meta.get("query") or nome or categoria)
         query_sugerida = (query_sugerida or "").strip()
@@ -332,7 +347,6 @@ def processar_interpretacao(
 
         cotacao1_id = cotacao_manager.insert_cotacao(
             prompt_id=prompt_id,
-            faltantes=tarefas_web if tarefas_web else None,
             observacoes="Cotação principal (automática).",
             prazo_validade=(datetime.now() + timedelta(days=15)).isoformat()
         )
@@ -343,45 +357,122 @@ def processar_interpretacao(
         if cotacao1_id:
             for qid in ids_primeira:
                 lista_q = resultados.get(qid, [])
-                for produto in lista_q:
-                    produto_id = produto.get("produto_id")
-                    if produto_id and produto_id not in produtos_principais:
-                        # Preparar payload similar ao main.py
+                
+                # Se há produtos (aceitos ou rejeitados pela LLM)
+                if lista_q:
+                    produto = lista_q[0]  # Sempre há apenas 1 produto por query após LLM
+                    
+                    # Verificar se é um produto rejeitado pela LLM
+                    if produto.get("llm_rejected"):
+                        # Produto rejeitado - preservar relatório LLM mas não adicionar à cotação
                         payload = {
-                            "query_id": qid, 
-                            "score": produto.get("score"), 
-                            "alternativa": False
+                            "query_id": qid,
+                            "score": 0,  # Score 0 para produtos rejeitados
+                            "alternativa": False,
+                            "status": "rejeitado_por_llm",
+                            "observacao": produto.get("observacao", "Produtos encontrados mas rejeitados pela análise LLM"),
+                            "llm_relatorio": produto.get("llm_relatorio", {})
                         }
                         
-                        # Se o produto foi aprovado pelo LLM, incluir o relatório
-                        if produto.get('llm_relatorio'):
-                            payload["llm_relatorio"] = produto.get('llm_relatorio')
-                        
-                        # Registrar/atualizar relatório com a análise local deste item (mesma estratégia do main.py)
+                        # Inserir relatório preservando a análise LLM
                         try:
                             cotacao_manager.insert_relatorio(
                                 cotacao_id=cotacao1_id,
                                 analise_local=[payload],
                                 criado_por=interpretation.get("criado_por"),
                             )
+                            logger.info(f"📝 Relatório LLM preservado para query {qid} (produtos rejeitados)")
                         except Exception as e:
                             logger.warning(f"⚠️ Falha ao registrar relatório da cotação {cotacao1_id}: {e}")
-                        
-                        item_id = cotacao_manager.insert_cotacao_item_from_result(
+                    
+                    else:
+                        # Produto aceito - processar normalmente
+                        produto_id = produto.get("produto_id")
+                        if produto_id and produto_id not in produtos_principais:
+                            payload = {
+                                "query_id": qid, 
+                                "score": produto.get("score"), 
+                                "alternativa": False
+                            }
+                            
+                            # Incluir relatório LLM se disponível
+                            if produto.get('llm_relatorio'):
+                                payload["llm_relatorio"] = produto.get('llm_relatorio')
+                            
+                            # Registrar relatório
+                            try:
+                                cotacao_manager.insert_relatorio(
+                                    cotacao_id=cotacao1_id,
+                                    analise_local=[payload],
+                                    criado_por=interpretation.get("criado_por"),
+                                )
+                            except Exception as e:
+                                logger.warning(f"⚠️ Falha ao registrar relatório da cotação {cotacao1_id}: {e}")
+                            
+                            # Inserir item na cotação
+                            item_id = cotacao_manager.insert_cotacao_item_from_result(
+                                cotacao_id=cotacao1_id,
+                                resultado_produto=produto,
+                                origem=produto.get("origem", "local"),
+                                produto_id=produto_id,
+                                payload=payload,
+                                quantidade=meta_por_id.get(qid, {}).get("quantidade", 1),
+                            )
+                            if item_id:
+                                itens_adicionados += 1
+                                produtos_principais.add(produto_id)
+                else:
+                    # Nenhum produto encontrado
+                    payload = {
+                        "query_id": qid,
+                        "score": 0,
+                        "alternativa": False,
+                        "status": "sem_produtos_encontrados",
+                        "observacao": "Nenhum produto encontrado na base de dados"
+                    }
+                    
+                    try:
+                        cotacao_manager.insert_relatorio(
                             cotacao_id=cotacao1_id,
-                            resultado_produto=produto,
-                            origem=produto.get("origem", "local"),
-                            produto_id=produto_id,
-                            payload=payload,
-                            quantidade=meta_por_id.get(qid, {}).get("quantidade", 1),
+                            analise_local=[payload],
+                            criado_por=interpretation.get("criado_por"),
                         )
-                        if item_id:
-                            itens_adicionados += 1
-                            produtos_principais.add(produto_id)
+                        logger.info(f"📝 Relatório registrado para query {qid} sem produtos encontrados")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Falha ao registrar relatório para query {qid} sem produtos: {e}")
+
+            # Inserir itens faltantes como registros em cotacoes_itens com status=False e pedido
+            faltantes_inseridos = 0
+            for tarefa in tarefas_web:
+                try:
+                    pedido = tarefa.get("query_sugerida") or None
+                    nome_faltante = tarefa.get("nome") or tarefa.get("categoria") or "Item não encontrado"
+                    quantidade = tarefa.get("quantidade") or 1
+                    item_id = cotacao_manager.insert_missing_item(
+                        cotacao_id=cotacao1_id,
+                        nome=nome_faltante,
+                        descricao=None,
+                        tags=["faltante", tarefa.get("tipo") or "item"],
+                        quantidade=quantidade,
+                        pedido=pedido,
+                        origem="web",
+                        payload={"query_id": tarefa.get("id")}
+                    )
+                    if item_id:
+                        faltantes_inseridos += 1
+                except Exception as e:
+                    logger.warning(f"⚠️ Falha ao inserir item faltante: {e}")
+
+            # Atualizar status da cotação conforme itens (incompleta se houver algum status=False)
+            try:
+                cotacao_manager.update_status_from_items(cotacao1_id)
+            except Exception as e:
+                logger.warning(f"⚠️ Falha ao atualizar status da cotação {cotacao1_id}: {e}")
 
         saida["cotacoes"] = {
             "principal_id": cotacao1_id,
-            "itens_adicionados": itens_adicionados
+            "itens_adicionados": itens_adicionados,
+            "faltantes_inseridos": locals().get("faltantes_inseridos", 0)
         }
 
     return saida

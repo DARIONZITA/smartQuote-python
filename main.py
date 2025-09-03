@@ -94,7 +94,23 @@ def executar_estrutura_de_queries(
                 print("🎯 LLM rejeitou todos os produtos candidatos - nenhum atende aos critérios específicos")
             else:
                 print(f"🎯 Índice LLM inválido: {idx_escolhido} (esperado: 0-{len(lista)-1})")
-            lista = []
+            
+            # PRESERVAR o relatório LLM mesmo quando nenhum produto é escolhido
+            # Criar um objeto especial para representar a análise rejeitada
+            if relatorio_llm and lista:  # Se houve análise LLM e havia produtos candidatos
+                produto_rejeitado = {
+                    "llm_match": False,
+                    "llm_rejected": True,
+                    "llm_relatorio": relatorio_llm,
+                    "query_id": q["id"],
+                    "status": "rejeitado_por_llm",
+                    "observacao": "Produtos encontrados mas rejeitados pela análise LLM"
+                }
+                # Manter o produto rejeitado para que o relatório seja preservado
+                lista = [produto_rejeitado]
+                print(f"🧠 [LLM] Preservando relatório de análise para produtos rejeitados - {len(relatorio_llm)} campos")
+            else:
+                lista = []
 
         resultados_por_query[q["id"]] = lista
 
@@ -293,21 +309,54 @@ def processar_interpretacao(
 
         cotacao1_id = cotacao_manager.insert_cotacao(
             prompt_id=prompt_id,
-            faltantes=tarefas_web if tarefas_web else None,
             observacoes="Cotação principal (automática)."
         )
 
         itens_adicionados = 0
         produtos_principais = set()  # Conjunto para armazenar IDs dos produtos já adicionados na cotação principal
         
-        if cotacao1_id:
+    if cotacao1_id:
+            # Preparar lista de análises para relatório (independente de produtos encontrados)
+            analises_relatório = []
+            
             for qid in ids_primeira:
                 res_list = resultados.get(qid) or []
+                
+                # Se não há resultados para esta query, criar análise indicando isso
                 if not res_list:
+                    analises_relatório.append({
+                        "query_id": qid,
+                        "status": "sem_resultados",
+                        "observacao": f"Nenhum produto encontrado para query {qid}",
+                        "alternativa": False
+                    })
                     continue
+                    
                 top_resultado = res_list[0]
+                
+                # Verificar se é um produto rejeitado pela LLM
+                if top_resultado.get("llm_rejected"):
+                    # Produto rejeitado - preservar relatório LLM mas não adicionar à cotação
+                    analises_relatório.append({
+                        "query_id": qid,
+                        "score": 0,  # Score 0 para produtos rejeitados
+                        "alternativa": False,
+                        "status": "rejeitado_por_llm",
+                        "observacao": top_resultado.get("observacao", "Produtos encontrados mas rejeitados pela análise LLM"),
+                        "llm_relatorio": top_resultado.get("llm_relatorio", {})
+                    })
+                    print(f"🧠 [COTACAO] Preservando relatório LLM para query {qid} (produtos rejeitados): {len(top_resultado.get('llm_relatorio', {}))} campos")
+                    continue
+                
                 produto_id_local = top_resultado.get("produto_id")
+                
                 if not produto_id_local:
+                    analises_relatório.append({
+                        "query_id": qid,
+                        "status": "produto_sem_id",
+                        "observacao": f"Produto '{top_resultado.get('nome')}' sem ID válido",
+                        "alternativa": False
+                    })
                     print(
                         f"⚠️ Item '{top_resultado.get('nome')}' da query '{qid}' sem ID de produto. Pulando.",
                         file=sys.stderr,
@@ -320,6 +369,12 @@ def processar_interpretacao(
                     quantidade = 1
 
                 if cotacao_manager.check_cotacao_item_exists(cotacao1_id, produto_id_local):
+                    analises_relatório.append({
+                        "query_id": qid,
+                        "status": "produto_duplicado",
+                        "observacao": f"Produto '{top_resultado.get('nome')}' já existe na cotação",
+                        "alternativa": False
+                    })
                     print(
                         f"⚠️ Produto '{top_resultado.get('nome')}' já existe na cotação. Pulando duplicata.",
                         file=sys.stderr,
@@ -336,18 +391,14 @@ def processar_interpretacao(
                 # Se o produto foi aprovado pelo LLM, incluir o relatório
                 if top_resultado.get('llm_relatorio'):
                     payload["llm_relatorio"] = top_resultado.get('llm_relatorio')
+                    payload["status"] = "produto_adicionado"
                     print(f"🧠 [COTACAO] Adicionando relatório LLM para {qid}: {len(top_resultado.get('llm_relatorio', {}))} campos")
                 else:
+                    payload["status"] = "produto_sem_relatorio_llm"
                     print(f"⚠️ [COTACAO] Nenhum relatório LLM encontrado para {qid}")
                 
-               
-                
-                #inserir relatorio local, se já existe adionar apenas o payload no array
-                relatorio_id = cotacao_manager.insert_relatorio(
-                    cotacao_id=cotacao1_id,
-                    analise_local=[payload],
-                    criado_por=interpretation.get("criado_por"),
-                )
+                # Adicionar à lista de análises
+                analises_relatório.append(payload)
 
                 item_id = cotacao_manager.insert_cotacao_item_from_result(
                     cotacao_id=cotacao1_id,
@@ -360,6 +411,52 @@ def processar_interpretacao(
                 if item_id:
                     itens_adicionados += 1
                     produtos_principais.add(produto_id_local)  # Adicionar produto ao conjunto
+            
+            # Inserir relatório consolidado (sempre, independente de ter produtos ou não)
+            if analises_relatório or not ids_primeira:
+                # Se não temos análises, significa que não havia queries para processar
+                if not analises_relatório:
+                    analises_relatório = [{
+                        "query_id": "GERAL",
+                        "status": "sem_queries_para_processar", 
+                        "observacao": "Nenhuma query válida encontrada para processamento",
+                        "alternativa": False
+                    }]
+                
+                relatorio_id = cotacao_manager.insert_relatorio(
+                    cotacao_id=cotacao1_id,
+                    analise_local=analises_relatório,
+                    criado_por=interpretation.get("criado_por"),
+                )
+                print(f"📊 [COTACAO] Relatório de análise criado com {len(analises_relatório)} entradas")
+
+            # Inserir itens faltantes como registros em cotacoes_itens com status=False e pedido
+            faltantes_inseridos = 0
+            for tarefa in tarefas_web:
+                try:
+                    pedido = tarefa.get("query_sugerida") or None
+                    nome_faltante = tarefa.get("nome") or tarefa.get("categoria") or "Item não encontrado"
+                    quantidade = tarefa.get("quantidade") or 1
+                    item_id = cotacao_manager.insert_missing_item(
+                        cotacao_id=cotacao1_id,
+                        nome=nome_faltante,
+                        descricao=None,
+                        tags=["faltante", tarefa.get("tipo") or "item"],
+                        quantidade=quantidade,
+                        pedido=pedido,
+                        origem="web",
+                        payload={"query_id": tarefa.get("id")}
+                    )
+                    if item_id:
+                        faltantes_inseridos += 1
+                except Exception as e:
+                    print(f"⚠️ Falha ao inserir item faltante: {e}", file=sys.stderr)
+
+            # Atualizar status da cotação conforme itens (incompleta se houver algum status=False)
+            try:
+                cotacao_manager.update_status_from_items(cotacao1_id)
+            except Exception as e:
+                print(f"⚠️ Falha ao atualizar status da cotação {cotacao1_id}: {e}", file=sys.stderr)
 
         alternativas_ids: List[str] = []
         alternativas = [qid for qid, meta in meta_por_id.items() if meta.get("tipo") == "alternativa"]
@@ -423,6 +520,7 @@ def processar_interpretacao(
         saida["cotacoes"] = {
             "principal_id": cotacao1_id,
             "itens_adicionados": itens_adicionados,
+            "faltantes_inseridos": locals().get("faltantes_inseridos", 0),
             "alternativas_ids": alternativas_ids,
         }
 

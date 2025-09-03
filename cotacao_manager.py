@@ -17,7 +17,7 @@ class CotacaoManager:
         
     def _is_available(self) -> bool:
         """Verifica se o cliente Supabase está disponível."""
-        return self.supabase.is_available()
+        return bool(self.supabase and self.supabase.is_available())
 
 
     def insert_relatorio(self, cotacao_id: int, analise_local: List[Dict[str, Any]], criado_por: int = None):
@@ -129,19 +129,20 @@ class CotacaoManager:
         prazo_validade: Optional[str] = None
     ) -> Optional[int]:
         """
-        Cria uma cotação mínima via API REST. Não exige produto_id e suporta salvar ids de queries faltantes.
+        Cria uma cotação mínima via API REST. A lógica de 'faltantes' foi migrada para cotacoes_itens,
+        portanto este método não envia mais o campo 'faltantes'.
         """
         payload: Dict[str, Any] = {"prompt_id": prompt_id}
+        # Definição de status padrão caso não seja informado
         if status is None:
-            status = "incompleta" if (faltantes and len(faltantes) > 0) else "completa"
+            status = "completa"
         payload["status"] = status
         payload["aprovacao"] = bool(aprovacao) if aprovacao is not None else False
         if observacoes:
             payload["observacoes"] = observacoes
         if condicoes is not None:
             payload["condicoes"] = condicoes
-        if faltantes is not None:
-            payload["faltantes"] = faltantes
+        # Campo 'faltantes' não é mais enviado; os itens faltantes passam a ser criados em cotacoes_itens.
         if motivo is not None:
             payload["motivo"] = motivo
         if aprovado_por is not None:
@@ -242,6 +243,8 @@ class CotacaoManager:
         condicoes: Optional[Dict[str, Any]] = None,
         payload: Optional[Dict[str, Any]] = None,
         quantidade: Optional[int] = 1,
+        status: Optional[bool] = None,
+        pedido: Optional[str] = None,
     ) -> Optional[int]:
         """Adiciona um item à cotação."""
         if not self._is_available():
@@ -249,8 +252,8 @@ class CotacaoManager:
             return None
 
         origem_norm = str(origem or "").lower()
-        if origem_norm not in {"local", "api", "externO"}:
-            print("⚠️ Origem inválida. Use 'local', 'api' ou 'web'.")
+        if origem_norm not in {"local", "api", "web", "externo"}:
+            print("⚠️ Origem inválida. Use 'local', 'api', 'web' ou 'externo'.")
             return None
 
         # Verificar duplicata para produtos locais
@@ -269,8 +272,8 @@ class CotacaoManager:
         # Snapshot obrigatório quando externo
         if produto_id is None:
             if not item_nome:
-                print("⚠️ item_nome é obrigatório para itens externos.")
-                return None
+                # Preencher nome padrão quando não fornecido para itens externos
+                item_nome = "Item não encontrado"
             body.update({
                 "provider": provider,
                 "external_url": external_url,
@@ -300,6 +303,12 @@ class CotacaoManager:
             quantidade = 1
         body["quantidade"] = int(quantidade)
 
+        # novos campos opcionais
+        if status is not None:
+            body["status"] = bool(status)
+        if pedido is not None:
+            body["pedido"] = pedido
+
         try:
             resp = self.supabase.supabase.table("cotacoes_itens").insert(body).execute()
             data = getattr(resp, "data", None) or []
@@ -308,6 +317,12 @@ class CotacaoManager:
                 print(f"🧾 Item de cotação criado: id={item_id}")
                 # Recalcular orçamento geral da cotação
                 self.recalcular_orcamento_geral(cotacao_id)
+                # Se o item inserido está com status False, marcar a cotação como 'incompleta'
+                try:
+                    if status is not None and (status is False or str(status).lower() == "false"):
+                        self.supabase.supabase.table("cotacoes").update({"status": "incompleta"}).eq("id", cotacao_id).execute()
+                except Exception as es:
+                    print(f"⚠️ Falha ao atualizar status da cotação {cotacao_id} para 'incompleta': {es}")
                 return item_id
 
             # Fallback: tentar localizar pelo par (cotacao_id, item_nome) mais recente
@@ -330,6 +345,68 @@ class CotacaoManager:
         except Exception as e:
             print(f"❌ Erro ao criar item da cotação: {e}")
         return None
+
+    def update_status_from_items(self, cotacao_id: int) -> Optional[str]:
+        """
+        Atualiza o status da cotação para 'incompleta' se existir algum item com status=False;
+        caso contrário, define como 'completa'. Retorna o status aplicado.
+        """
+        if not self._is_available():
+            return None
+        try:
+            # Buscar se há pelo menos um item com status=False
+            resp = (
+                self.supabase.supabase
+                .table("cotacoes_itens")
+                .select("id, status")
+                .eq("cotacao_id", cotacao_id)
+                .eq("status", False)
+                .limit(1)
+                .execute()
+            )
+            data = getattr(resp, "data", None) or []
+            new_status = "incompleta" if data else "completa"
+            self.supabase.supabase.table("cotacoes").update({"status": new_status}).eq("id", cotacao_id).execute()
+            return new_status
+        except Exception as e:
+            print(f"⚠️ Erro ao atualizar status da cotação {cotacao_id} a partir dos itens: {e}")
+            return None
+
+    def insert_missing_item(
+        self,
+        cotacao_id: int,
+        *,
+        nome: Optional[str] = None,
+        descricao: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        quantidade: Optional[int] = 1,
+        pedido: Optional[str] = None,
+        origem: str = "web",
+        payload: Optional[Dict[str, Any]] = None,
+    ) -> Optional[int]:
+        """
+        Insere um item "faltante" na cotação com status=False e o campo 'pedido'.
+        """
+        nome_final = (nome or "Item não encontrado").strip()
+        desc_final = (descricao or "Item não encontrado na busca local").strip()
+        tags_final = tags or ["faltante"]
+        return self.insert_cotacao_item(
+            cotacao_id=cotacao_id,
+            origem=origem,
+            produto_id=None,
+            provider=None,
+            external_url=None,
+            item_nome=nome_final,
+            item_descricao=desc_final,
+            item_tags=tags_final,
+            item_preco=None,
+            item_moeda="AOA",
+            condicoes=None,
+            payload=payload,
+            quantidade=quantidade or 1,
+            status=False,
+            pedido=pedido,
+        )
 
     def insert_cotacao_item_from_result(
         self,

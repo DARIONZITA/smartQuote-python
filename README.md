@@ -11,6 +11,18 @@ Esta API roda **independentemente** da API principal Node.js e pode ser hospedad
 - **Escalabilidade horizontal**: Múltiplas instâncias com load balancing
 - **Zero dependências** da API principal: Apenas Weaviate, Supabase e GROQ
 
+## 📚 Documentação Completa
+
+### 📖 **Documentos Principais**
+- **[🔧 Como Consumir a API](CONSUMO_API_BUSCA_LOCAL.md)** - Guia completo para desenvolvedores
+- **[📊 Tabela Relatórios](TABELA_RELATORIOS.md)** - Estrutura e funcionamento da auditoria
+- **[🔍 Exemplos de Consultas](EXEMPLOS_CONSULTAS_RELATORIOS.md)** - SQL práticos para análises
+- **[🎨 Diagrama Visual](DIAGRAMA_RELATORIOS.md)** - Estruturas visuais e fluxogramas
+
+### 🎯 **Documentos Específicos**
+- **[📋 Como Rodar](COMO-RODAR.md)** - Setup e execução local
+- **[🔄 Migração HuggingFace](MIGRACAO_API_HF.md)** - Histórico de migração
+
 ## 🏗️ Arquitetura Independente
 
 ```
@@ -414,3 +426,59 @@ limiter = Limiter(
 def process_interpretation():
     # ...
 ```
+
+## 📊 Sistema de Auditoria e Relatórios
+
+### 🎯 **Nova Funcionalidade: Rastreabilidade Completa**
+
+A partir da versão 2.0, o sistema conta com **auditoria completa** de todas as análises e decisões:
+
+#### ✅ **Garantias de Rastreabilidade**
+- ✅ **Todas as buscas geram relatórios** (sucesso ou falha)
+- ✅ **Análises LLM preservadas** mesmo quando produtos são rejeitados
+- ✅ **Histórico detalhado** de critérios e justificativas
+- ✅ **Métricas de performance** para otimização contínua
+
+#### 📋 **Tipos de Relatório Criados**
+```json
+// Produto aceito - Relatório completo + Item na cotação
+{
+    "status": "produto_adicionado",
+    "llm_relatorio": { /* análise completa LLM */ }
+}
+
+// Produto rejeitado - Relatório preservado + Sem item na cotação
+{
+    "status": "rejeitado_por_llm", 
+    "llm_relatorio": { /* análise completa PRESERVADA */ }
+}
+
+// Busca sem resultados - Relatório de análise vazia
+{
+    "status": "sem_produtos_encontrados",
+    "observacao": "Nenhum produto encontrado na base"
+}
+```
+
+#### 🔍 **Consultando Relatórios**
+```sql
+-- Ver relatórios de uma cotação específica
+SELECT analise_local FROM relatorios WHERE cotacao_id = 123;
+
+-- Produtos rejeitados pela LLM com justificativas
+SELECT 
+    analise_local -> 0 -> 'llm_relatorio' ->> 'justificativa_escolha' as motivo_rejeicao
+FROM relatorios 
+WHERE analise_local @> '[{"status": "rejeitado_por_llm"}]';
+
+-- Taxa de sucesso da LLM
+SELECT 
+    COUNT(CASE WHEN analise_local @> '[{"status": "produto_adicionado"}]' THEN 1 END) as aceitos,
+    COUNT(CASE WHEN analise_local @> '[{"status": "rejeitado_por_llm"}]' THEN 1 END) as rejeitados
+FROM relatorios;
+```
+
+#### 📚 **Documentação Detalhada**
+- **[📊 Estrutura Completa](TABELA_RELATORIOS.md)** - Como funciona a tabela relatórios
+- **[🔍 Consultas SQL](EXEMPLOS_CONSULTAS_RELATORIOS.md)** - Exemplos práticos de análise
+- **[🎨 Diagramas Visuais](DIAGRAMA_RELATORIOS.md)** - Fluxos e estruturas visuais
