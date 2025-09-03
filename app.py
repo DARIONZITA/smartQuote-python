@@ -357,6 +357,16 @@ def processar_interpretacao(
                         if produto.get('llm_relatorio'):
                             payload["llm_relatorio"] = produto.get('llm_relatorio')
                         
+                        # Registrar/atualizar relatório com a análise local deste item (mesma estratégia do main.py)
+                        try:
+                            cotacao_manager.insert_relatorio(
+                                cotacao_id=cotacao1_id,
+                                analise_local=[payload],
+                                criado_por=interpretation.get("criado_por"),
+                            )
+                        except Exception as e:
+                            logger.warning(f"⚠️ Falha ao registrar relatório da cotação {cotacao1_id}: {e}")
+                        
                         item_id = cotacao_manager.insert_cotacao_item_from_result(
                             cotacao_id=cotacao1_id,
                             resultado_produto=produto,
