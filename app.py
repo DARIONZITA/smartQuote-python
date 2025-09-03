@@ -386,7 +386,7 @@ def processar_interpretacao(
 
     return saida
 
-@app.route('/health', methods=['GET'])
+@app.route('/health', methods=["GET", "HEAD"])
 def health_check():
     """Endpoint de health check"""
     try:
