@@ -176,7 +176,17 @@ def executar_estrutura_de_queries(
     has_q1 = bool(resultados_por_query.get("Q1"))
 
     # Considerar somente itens (Q1..QN) para determinar faltantes
-    missing_items: List[str] = [qid for qid in item_ids if not resultados_por_query.get(qid)]
+    missing_items: List[str] = []
+    for qid in item_ids:
+        resultados_query = resultados_por_query.get(qid, [])
+        # Considerar faltante se: vazio OU se contém apenas produtos rejeitados pela LLM
+        if not resultados_query:
+            missing_items.append(qid)
+        elif len(resultados_query) == 1 and resultados_query[0].get("llm_rejected"):
+            # Query rejeitada pela LLM - será tratada como faltante no loop principal
+            # Não adicionar à lista missing_items para evitar duplicação
+            pass
+        # Queries com produtos válidos não são consideradas faltantes
     faltando: List[str] = missing_items
 
     if verbose:
@@ -364,7 +374,7 @@ def processar_interpretacao(
                     
                     # Verificar se é um produto rejeitado pela LLM
                     if produto.get("llm_rejected"):
-                        # Produto rejeitado - preservar relatório LLM mas não adicionar à cotação
+                        # Produto rejeitado - criar item faltante com relatório LLM preservado
                         payload = {
                             "query_id": qid,
                             "score": 0,  # Score 0 para produtos rejeitados
@@ -384,6 +394,27 @@ def processar_interpretacao(
                             logger.info(f"📝 Relatório LLM preservado para query {qid} (produtos rejeitados)")
                         except Exception as e:
                             logger.warning(f"⚠️ Falha ao registrar relatório da cotação {cotacao1_id}: {e}")
+                        
+                        # Criar item faltante para produto rejeitado pela LLM
+                        try:
+                            query_geradora = meta_por_id.get(qid, {}).get("query")
+                            nome_item = meta_por_id.get(qid, {}).get("fonte", {}).get("nome") or "Item rejeitado pela LLM"
+                            quantidade = meta_por_id.get(qid, {}).get("quantidade", 1)
+                            
+                            item_id = cotacao_manager.insert_missing_item(
+                                cotacao_id=cotacao1_id,
+                                nome=nome_item,
+                                descricao="Produtos encontrados mas rejeitados pela análise LLM",
+                                tags=["rejeitado_llm", "faltante"],
+                                quantidade=quantidade,
+                                pedido=query_geradora,
+                                origem="local",
+                                payload=payload
+                            )
+                            if item_id:
+                                logger.info(f"📝 Item faltante criado para produto rejeitado pela LLM: {nome_item}")
+                        except Exception as e:
+                            logger.warning(f"⚠️ Falha ao criar item faltante para produto rejeitado pela LLM: {e}")
                     
                     else:
                         # Produto aceito - processar normalmente
