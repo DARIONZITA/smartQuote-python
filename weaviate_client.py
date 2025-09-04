@@ -190,7 +190,14 @@ class WeaviateManager:
                 "tags": tags_array,
                 "estoque": estoque
             }
-            collection.data.insert(uuid=uuid_produto, properties=dados_weaviate, vector=vectors)
+            collection.data.insert(
+                uuid=uuid_produto,
+                properties=dados_weaviate,
+                vectors={   # <- aqui é plural
+                    "vetor_portugues": emb_pt,
+                    "vetor_multilingue": emb_multi
+                }
+            )
             print(f"✔ Produto novo indexado: {nome} (id={produto_id})")
             self._known_ids.add(produto_id)
             return

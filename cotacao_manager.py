@@ -420,6 +420,7 @@ class CotacaoManager:
         condicoes: Optional[Dict[str, Any]] = None,
         payload: Optional[Dict[str, Any]] = None,
         quantidade: Optional[int] = 1,
+        pedido: Optional[str] = None,
     ) -> Optional[int]:
         """Constrói snapshot a partir de um resultado de busca e insere como item da cotação."""
         snap = self._build_item_snapshot_from_result(resultado_produto)
@@ -437,6 +438,7 @@ class CotacaoManager:
             condicoes=condicoes,
             payload=payload,
             quantidade=quantidade,
+            pedido=pedido,
         )
 
     def recalcular_orcamento_geral(self, cotacao_id: int) -> Optional[float]:

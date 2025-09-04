@@ -407,6 +407,7 @@ def processar_interpretacao(
                     produto_id=produto_id_local,
                     payload=payload,
                     quantidade=quantidade,
+                    pedido=meta_por_id.get(qid, {}).get("query"),
                 )
                 if item_id:
                     itens_adicionados += 1
@@ -513,6 +514,7 @@ def processar_interpretacao(
                 origem="local",
                 produto_id=produto_id_local,
                 payload=payload_alt,
+                pedido=meta_por_id.get(qid, {}).get("query"),
             )
             if item_id:
                 alternativas_ids.append(str(cotacao_alt_id))

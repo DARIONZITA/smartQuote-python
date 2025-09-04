@@ -410,6 +410,8 @@ def processar_interpretacao(
                                 logger.warning(f"⚠️ Falha ao registrar relatório da cotação {cotacao1_id}: {e}")
                             
                             # Inserir item na cotação
+                            # Passar a query que gerou o item no campo 'pedido'
+                            query_geradora = meta_por_id.get(qid, {}).get("query")
                             item_id = cotacao_manager.insert_cotacao_item_from_result(
                                 cotacao_id=cotacao1_id,
                                 resultado_produto=produto,
@@ -417,6 +419,7 @@ def processar_interpretacao(
                                 produto_id=produto_id,
                                 payload=payload,
                                 quantidade=meta_por_id.get(qid, {}).get("quantidade", 1),
+                                pedido=query_geradora,
                             )
                             if item_id:
                                 itens_adicionados += 1
