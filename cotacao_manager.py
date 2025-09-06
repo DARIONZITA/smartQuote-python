@@ -22,7 +22,7 @@ class CotacaoManager:
 
     def insert_relatorio(self, cotacao_id: int, analise_local: List[Dict[str, Any]], criado_por: int = None):
         """
-        Insere um relatório na tabela 'relatorios' e retorna o id criado, se já existir adiciona apenas o payload no array.
+        Insere um relatório na tabela 'relatorios' e retorna o id criado, se já existir adiciona apenas o analise_local no array.
         """
         if not self._is_available():
             print("⚠️ Supabase indisponível: não foi possível criar relatório.")
@@ -35,7 +35,7 @@ class CotacaoManager:
             if data:
                 relatorio = data[0]
                 relatorio_id = relatorio["id"]
-                # Adiciona o novo payload ao array analise_local
+                # Adiciona o novo analise_local ao array analise_local
                 analise_atual = relatorio.get("analise_local") or []
                 novo_analise = analise_atual + analise_local
                 self.supabase.supabase.table("relatorios").update({"analise_local": novo_analise, "atualizado_em": "now()"}).eq("id", relatorio_id).execute()
@@ -132,30 +132,30 @@ class CotacaoManager:
         Cria uma cotação mínima via API REST. A lógica de 'faltantes' foi migrada para cotacoes_itens,
         portanto este método não envia mais o campo 'faltantes'.
         """
-        payload: Dict[str, Any] = {"prompt_id": prompt_id}
+        analise_local: Dict[str, Any] = {"prompt_id": prompt_id}
         # Definição de status padrão caso não seja informado
         if status is None:
             status = "completa"
-        payload["status"] = status
-        payload["aprovacao"] = bool(aprovacao) if aprovacao is not None else False
+        analise_local["status"] = status
+        analise_local["aprovacao"] = bool(aprovacao) if aprovacao is not None else False
         if observacoes:
-            payload["observacoes"] = observacoes
+            analise_local["observacoes"] = observacoes
         if condicoes is not None:
-            payload["condicoes"] = condicoes
+            analise_local["condicoes"] = condicoes
         # Campo 'faltantes' não é mais enviado; os itens faltantes passam a ser criados em cotacoes_itens.
         if motivo is not None:
-            payload["motivo"] = motivo
+            analise_local["motivo"] = motivo
         if aprovado_por is not None:
-            payload["aprovado_por"] = aprovado_por
+            analise_local["aprovado_por"] = aprovado_por
         if prazo_validade is not None:
-            payload["prazo_validade"] = prazo_validade
-        payload.setdefault("orcamento_geral", 0)
+            analise_local["prazo_validade"] = prazo_validade
+        analise_local.setdefault("orcamento_geral", 0)
 
         # URL da API (ajuste conforme necessário)
         api_url = f"{API_BASE_URL}/api/cotacoes"
 
         try:
-            response = requests.post(api_url, json=payload)
+            response = requests.post(api_url, json=analise_local)
             if response.status_code == 201:
                 resp_json = response.json()
                 cotacao_data = resp_json.get("data")
@@ -241,7 +241,7 @@ class CotacaoManager:
         item_preco: Optional[float] = None,
         item_moeda: Optional[str] = "AOA",
         condicoes: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
+        analise_local: Optional[Dict[str, Any]] = None,
         quantidade: Optional[int] = 1,
         status: Optional[bool] = None,
         pedido: Optional[str] = None,
@@ -296,8 +296,8 @@ class CotacaoManager:
 
         if condicoes is not None:
             body["condicoes"] = condicoes
-        if payload is not None:
-            body["payload"] = payload
+        if analise_local is not None:
+            body["analise_local"] = analise_local
         # incluir quantidade (local ou externo)
         if quantidade is None or quantidade <= 0:
             quantidade = 1
@@ -382,7 +382,7 @@ class CotacaoManager:
         quantidade: Optional[int] = 1,
         pedido: Optional[str] = None,
         origem: str = "web",
-        payload: Optional[Dict[str, Any]] = None,
+        analise_local: Optional[Dict[str, Any]] = None,
     ) -> Optional[int]:
         """
         Insere um item "faltante" na cotação com status=False e o campo 'pedido'.
@@ -402,7 +402,7 @@ class CotacaoManager:
             item_preco=None,
             item_moeda="AOA",
             condicoes=None,
-            payload=payload,
+            analise_local=analise_local,
             quantidade=quantidade or 1,
             status=False,
             pedido=pedido,
@@ -418,7 +418,7 @@ class CotacaoManager:
         provider: Optional[str] = None,
         external_url: Optional[str] = None,
         condicoes: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
+        analise_local: Optional[Dict[str, Any]] = None,
         quantidade: Optional[int] = 1,
         pedido: Optional[str] = None,
     ) -> Optional[int]:
@@ -436,7 +436,7 @@ class CotacaoManager:
             item_preco=snap.get("item_preco"),
             item_moeda=snap.get("item_moeda"),
             condicoes=condicoes,
-            payload=payload,
+            analise_local=analise_local,
             quantidade=quantidade,
             pedido=pedido,
         )

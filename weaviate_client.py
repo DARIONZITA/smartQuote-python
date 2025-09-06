@@ -62,9 +62,13 @@ class HuggingFaceEmbeddingClient:
                 api_name="/predict"
             )
             
-            # O resultado já deve ser uma lista de floats
+            # Gradio retorna [[...]] para um texto, precisa "achatar"
             if isinstance(result, list) and len(result) > 0:
-                return result
+                # Se veio [[...]], pega só o primeiro (para um texto)
+                if isinstance(result[0], list):
+                    return result[0]  # Retorna apenas o embedding do primeiro texto
+                else:
+                    return result  # Já está no formato correto
             else:
                 raise Exception(f"Formato de resposta inesperado: {type(result)}")
                 
@@ -193,7 +197,7 @@ class WeaviateManager:
             collection.data.insert(
                 uuid=uuid_produto,
                 properties=dados_weaviate,
-                vectors={   # <- aqui é plural
+                vector={   # <- corrigido para singular
                     "vetor_portugues": emb_pt,
                     "vetor_multilingue": emb_multi
                 }

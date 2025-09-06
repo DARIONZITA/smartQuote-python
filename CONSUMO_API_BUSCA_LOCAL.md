@@ -1,4 +1,43 @@
-# Consumo da API Python de Busca Local (smartQuote)
+# Consumo - O status da cotação (`cotacoes.status`) passa a ser "incompleta" sempre que existir pelo menos um item em `cotacoes_itens` com `status = false`. Caso não haja itens pendentes, a cotação é "completa".
+- **Sincronização automática**: Antes de cada busca, o sistema agora sincroniza automaticamente com o Supabase, incluindo a remoção de produtos que foram apagados da base de dados. Isso garante que os resultados sempre reflitam o estado atual da base de dados.
+
+## Endpoints principais
+
+### 1) Health check
+- Método/rota: `GET /health`
+- Resposta: status de serviços (weaviate, supabase, decomposer).
+
+### 2) Status de sincronização
+- Método/rota: `GET /sync-status`
+- Resposta: 
+```json
+{
+  "timestamp": "2025-09-06T12:34:56.000Z",
+  "supabase_available": true,
+  "weaviate_available": true,
+  "produtos_supabase": 150,
+  "produtos_weaviate": 150,
+  "sincronizado": true
+}
+```
+
+### 3) Sincronização manual
+- Método/rota: `POST /sync-products`
+- Resposta:
+```json
+{
+  "status": "success",
+  "produtos_total_supabase": 150,
+  "produtos_novos_indexados": 2,
+  "produtos_removidos": 3,
+  "falhas": 0,
+  "timestamp": "2025-09-06T12:34:56.000Z"
+}
+```
+
+### 4) Processar interpretação (principal)
+- Método/rota: `POST /process-interpretation`
+- **Nota**: Este endpoint agora executa sincronização automática antes da busca.hon de Busca Local (smartQuote)
 
 Este documento orienta a app consumidora sobre como usar a API Python de busca local, o que esperar das respostas e como ler os dados no banco após a refatoração de "faltantes".
 
@@ -47,7 +86,8 @@ Este documento orienta a app consumidora sobre como usar a API Python de busca l
       "nome": "Switch PoE",
       "categoria": "rede",
       "quantidade": 10,
-      "query_sugerida": "Switch gerenciável PoE 24 portas"
+      "query_sugerida": "Switch gerenciável PoE 24 portas",
+      "item_id": 5555
     }
   ],
   "cotacoes": {
@@ -59,6 +99,7 @@ Este documento orienta a app consumidora sobre como usar a API Python de busca l
 ```
 - Notas:
   - O campo `faltantes` permanece na resposta apenas para referência/UX (tarefas de pesquisa externa). Ele NÃO é mais gravado dentro de `cotacoes`.
+  - Cada item em `faltantes` agora inclui `item_id`: o ID do registro criado em `cotacoes_itens` para facilitar operações posteriores.
   - Quando `criar_cotacao` for `true`, a API cria:
     - um `prompt`;
     - uma `cotacao` (status inicialmente “completa” a menos que haja itens faltantes);
@@ -66,14 +107,11 @@ Este documento orienta a app consumidora sobre como usar a API Python de busca l
     - para cada “faltante”, um item em `cotacoes_itens` com `status = false` e `pedido = query_sugerida`.
     - após inserir itens, o status da cotação é recalculado: “incompleta” se houver item com `status=false`.
 
-### 3) Busca híbrida direta
+### 5) Busca híbrida direta
 - Método/rota: `POST /hybrid-search`
+- **Nota**: Este endpoint também executa sincronização automática antes da busca.
 - Body: `{ "pesquisa": "texto", "filtros": { ... }, "limite": 10 }`
 - Resposta: lista agregada de resultados (sem criação de cotação).
-
-### 4) Sincronizar produtos
-- Método/rota: `POST /sync-products`
-- Efeito: traz novos produtos do Supabase e indexa no Weaviate.
 
 ## Banco de dados (tabelas e campos relevantes)
 
@@ -96,10 +134,10 @@ Este documento orienta a app consumidora sobre como usar a API Python de busca l
   - `produto_id` (int, opcional): presente para itens locais com produto no catálogo;
   - `origem` (text): "local", "api", "web" ou "externo";
   - `item_nome`, `item_descricao`, `item_preco`, `item_moeda`, `quantidade`;
-  - `payload` (jsonb): metadados úteis (ex.: `{ "query_id": "Q2" }`).
+  - `analise_local` (jsonb): metadados úteis (ex.: `{ "query_id": "Q2" }`).
 
 ### Tabela: relatorios
-- Usada para armazenar análises locais (ex.: payload com `llm_relatorio`).
+- Usada para armazenar análises locais (ex.: analise_local com `llm_relatorio`).
 - Atualizada/append quando novos itens são adicionados na cotação.
 
 ## Como a app consumidora deve se adaptar
@@ -134,7 +172,7 @@ Este documento orienta a app consumidora sobre como usar a API Python de busca l
   "quantidade": 10,
   "status": false,
   "pedido": "Switch gerenciável PoE 24 portas",
-  "payload": { "query_id": "Q2" }
+  "analise_local": { "query_id": "Q2" }
 }
 ```
 
@@ -158,7 +196,7 @@ ALTER TABLE cotacoes_itens
 ```
 
 ## Boas práticas de integração
-- Tratar `faltantes` no payload apenas como informação auxiliar; a fonte para pendências é `cotacoes_itens.status=false`.
+- Tratar `faltantes` no analise_local apenas como informação auxiliar; a fonte para pendências é `cotacoes_itens.status=false`.
 - Após resolver um item pendente (ex.: associar a um produto), atualizar o registro em `cotacoes_itens` para `status=true` e, opcionalmente, preencher `produto_id`, `item_preco`, etc.; depois, recalcular o status da `cotacao` (a API Python já fornece um endpoint que recalcula internamente quando ela cria/atualiza, mas sua app pode fazer esse ajuste no backend principal também).
 
 ## Suporte

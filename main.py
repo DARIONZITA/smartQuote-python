@@ -381,8 +381,8 @@ def processar_interpretacao(
                     )
                     continue
 
-                # Adicionar relatório LLM ao payload se disponível
-                payload = {
+                # Adicionar relatório LLM ao analise_local se disponível
+                analise_local = {
                     "query_id": qid, 
                     "score": top_resultado.get("score"), 
                     "alternativa": False
@@ -390,22 +390,22 @@ def processar_interpretacao(
                  
                 # Se o produto foi aprovado pelo LLM, incluir o relatório
                 if top_resultado.get('llm_relatorio'):
-                    payload["llm_relatorio"] = top_resultado.get('llm_relatorio')
-                    payload["status"] = "produto_adicionado"
+                    analise_local["llm_relatorio"] = top_resultado.get('llm_relatorio')
+                    analise_local["status"] = "produto_adicionado"
                     print(f"🧠 [COTACAO] Adicionando relatório LLM para {qid}: {len(top_resultado.get('llm_relatorio', {}))} campos")
                 else:
-                    payload["status"] = "produto_sem_relatorio_llm"
+                    analise_local["status"] = "produto_sem_relatorio_llm"
                     print(f"⚠️ [COTACAO] Nenhum relatório LLM encontrado para {qid}")
                 
                 # Adicionar à lista de análises
-                analises_relatório.append(payload)
+                analises_relatório.append(analise_local)
 
                 item_id = cotacao_manager.insert_cotacao_item_from_result(
                     cotacao_id=cotacao1_id,
                     resultado_produto=top_resultado,
                     origem="local",
                     produto_id=produto_id_local,
-                    payload=payload,
+                    analise_local=analise_local,
                     quantidade=quantidade,
                     pedido=meta_por_id.get(qid, {}).get("query"),
                 )
@@ -446,7 +446,7 @@ def processar_interpretacao(
                         quantidade=quantidade,
                         pedido=pedido,
                         origem="web",
-                        payload={"query_id": tarefa.get("id")}
+                        analise_local={"query_id": tarefa.get("id")}
                     )
                     if item_id:
                         faltantes_inseridos += 1
@@ -490,8 +490,8 @@ def processar_interpretacao(
                 print(f"⚠️ Alternativa '{top_resultado.get('nome')}' sem ID de produto. Pulando.", file=sys.stderr)
                 continue
 
-            # Adicionar relatório LLM ao payload se disponível
-            payload_alt = {
+            # Adicionar relatório LLM ao analise_local se disponível
+            analise_local_alt = {
                 "query_id": qid, 
                 "score": top_resultado.get("score"), 
                 "alternativa": True
@@ -499,13 +499,13 @@ def processar_interpretacao(
             
             # Se o produto foi aprovado pelo LLM, incluir o relatório
             if top_resultado.get('llm_relatorio'):
-                payload_alt["llm_relatorio"] = top_resultado.get('llm_relatorio')
+                analise_local_alt["llm_relatorio"] = top_resultado.get('llm_relatorio')
                 print(f"🧠 [COTACAO-ALT] Adicionando relatório LLM para alternativa {qid}: {len(top_resultado.get('llm_relatorio', {}))} campos")
             else:
                 print(f"⚠️ [COTACAO-ALT] Nenhum relatório LLM encontrado para alternativa {qid}")
             relatorio_id = cotacao_manager.insert_relatorio(
                 cotacao_id=cotacao1_id,
-                analise_local=[payload],
+                analise_local=[analise_local],
                 criado_por=interpretation.get("criado_por"),
             )
             item_id = cotacao_manager.insert_cotacao_item_from_result(
@@ -513,7 +513,7 @@ def processar_interpretacao(
                 resultado_produto=top_resultado,
                 origem="local",
                 produto_id=produto_id_local,
-                payload=payload_alt,
+                analise_local=analise_local_alt,
                 pedido=meta_por_id.get(qid, {}).get("query"),
             )
             if item_id:
@@ -609,9 +609,9 @@ def main():
 
         decomposer = SolutionDecomposer(api_key)
 
-        def handle_one(payload: Dict[str, Any]) -> Dict[str, Any]:
+        def handle_one(analise_local: Dict[str, Any]) -> Dict[str, Any]:
             # Compat: aceitar envelope { rid, interpretation } ou o próprio objeto de interpretação
-            interpretation = payload.get("interpretation") if isinstance(payload, dict) and "interpretation" in payload else payload
+            interpretation = analise_local.get("interpretation") if isinstance(analise_local, dict) and "interpretation" in analise_local else analise_local
             return processar_interpretacao(
                 interpretation=interpretation,
                 weaviate_manager=weaviate_manager,
@@ -626,9 +626,9 @@ def main():
             print("🔍 [PYTHON] Buscando apenas híbrido ponderado", file=sys.stderr)
             modelos = weaviate_manager.get_models()
             espacos = ["vetor_portugues"] + (["vetor_multilingue"] if modelos.get("vetor_multilingue") is not None and usar_multilingue else [])
-            def executar_busca_hibrida(payload):
-                query = payload.get("pesquisa", "").strip()
-                filtros = payload.get("filtros", {})
+            def executar_busca_hibrida(analise_local):
+                query = analise_local.get("pesquisa", "").strip()
+                filtros = analise_local.get("filtros", {})
                 if not query:
                     print(json.dumps({"status": "error", "error": "Nenhuma pesquisa informada."}))
                     return
@@ -666,8 +666,8 @@ def main():
                     if not line:
                         continue
                     try:
-                        payload = json.loads(line)
-                        executar_busca_hibrida(payload)
+                        analise_local = json.loads(line)
+                        executar_busca_hibrida(analise_local)
                     except Exception as e:
                         print(f"❌ Erro ao processar linha: {e}", file=sys.stderr)
                 return
@@ -677,11 +677,11 @@ def main():
                     print("❌ [PYTHON] Nenhum dado recebido via stdin", file=sys.stderr)
                     sys.exit(1)
                 try:
-                    payload = json.loads(input_data)
+                    analise_local = json.loads(input_data)
                 except Exception as e:
                     print(f"❌ [PYTHON] Erro ao fazer parse do JSON: {e}", file=sys.stderr)
                     sys.exit(1)
-                executar_busca_hibrida(payload)
+                executar_busca_hibrida(analise_local)
                 return
            
 
@@ -719,7 +719,7 @@ def main():
                 print("❌ [PYTHON] Nenhum dado recebido via stdin", file=sys.stderr)
                 sys.exit(1)
             try:
-                payload = json.loads(input_data)
+                analise_local = json.loads(input_data)
             except json.JSONDecodeError as e:
                 print(f"❌ [PYTHON] Erro ao fazer parse do JSON: {e}", file=sys.stderr)
                 print(json.dumps({
@@ -730,7 +730,7 @@ def main():
                 sys.exit(1)
 
             try:
-                result = handle_one(payload)
+                result = handle_one(analise_local)
                 print(json.dumps(result, ensure_ascii=False))
             except Exception as e:
                 print(f"❌ [PYTHON] Erro inesperado: {e}", file=sys.stderr)

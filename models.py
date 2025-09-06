@@ -10,7 +10,6 @@ class ComponentPriority(str, Enum):
 
 class ComponenteParaAquisicao(BaseModel):
     nome: str = Field(description="Nome do componente")
-    natureza_componente: str = Field(description="natureza_componente do componente (hardware, software, servico)")
     prioridade: ComponentPriority = Field(description="Prioridade do componente")
     categoria: str = Field(description="Categoria")
     especificacoes_minimas: Optional[dict] = Field(default_factory=dict)
@@ -34,6 +33,5 @@ class DecompositionResult(BaseModel):
     """Resultado da decomposição em componentes"""
     solucao_principal: str = Field(description="Solução principal identificada")
     tipo_de_solucao: str = Field(description="Tipo de solução: produto ou sistema")
-    complexidade_estimada: str = Field(description="Nível de complexidade: simples, medio, complexo")
     itens_a_comprar: List[ComponenteParaAquisicao] = Field(description="Lista de componentes que precisam ser adquiridos")
     prazo_implementacao_dias: int = Field(default=0, description="Prazo estimado de implementação")

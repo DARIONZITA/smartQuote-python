@@ -13,14 +13,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Imports robustos
 try:
     from text_utils import (
-        normalize_text, expand_query_with_synonyms, preprocess_termos, 
+        normalize_text, preprocess_termos, 
         _detectar_especificidade
     )
     from config import CATEGORY_EQUIV, STOPWORDS_PT, GROQ_API_KEY
 except ImportError:
     try:
         from .text_utils import (
-            normalize_text, expand_query_with_synonyms, preprocess_termos, 
+            normalize_text, preprocess_termos, 
             _detectar_especificidade
         )
         from .config import CATEGORY_EQUIV, STOPWORDS_PT, GROQ_API_KEY
@@ -51,7 +51,7 @@ def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict
             "nome": c.get("nome", ""),
             "categoria": c.get("categoria_geral") or c.get("categoria") or "",
             "descricao": (c.get("descricao_geral") or c.get("descricao") or "")[:400], # Limita o tamanho da descrição
-            "preco": c.get("preco"),
+            "preço": c.get("preco"),
             "estoque": c.get("estoque"),
         })
 
@@ -135,7 +135,7 @@ def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict
         f"QUERY: {query}\n"
         f"FILTROS: {filtros_str}\n"
         f"DADOS ORCAMENTAIS: {custo_beneficio or {}}\n"
-        f"RIGOR: {rigor or 0}\n"
+        f"RIGOR(0-5): {rigor or 0}\n"
         f"CANDIDATOS: {json.dumps(compacts, ensure_ascii=False)}\n\n"
         "Analise e retorne o JSON completo com o ranking e as justificativas."
     )
@@ -147,8 +147,8 @@ def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict
         client = Groq(api_key=api_key)
         resp = client.chat.completions.create(
             # Usar um modelo mais recente e robusto, se disponível
-            model="llama-3.3-70b-versatile", 
-            #model="llama-3.1-8b-instant",
+            #model="llama-3.3-70b-versatile", 
+            model="openai/gpt-oss-120b",
             messages=[
                 {"role": "system", "content": prompt_sistema},
                 {"role": "user", "content": user_msg},
@@ -179,6 +179,8 @@ def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict
             return {"index": -1, "relatorio": {"erro": f"Índice fora da faixa: {idx}"}}
 
         print(f"[LLM] ✅ JSON recebido e válido - Índice escolhido: {idx}", file=sys.stderr)
+        # adicionar no relatorio o campo query
+        relatorio["query"] = query
         return {"index": idx, "relatorio": relatorio}
 
     except json.JSONDecodeError as e:
@@ -348,9 +350,12 @@ def buscar_hibrido_ponderado(client: weaviate.WeaviateClient, modelos: dict, que
     except Exception as e:
         print(f"ERRO: Falha ao gerar embedding para query '{query}': {e}", file=sys.stderr)
         return []
-        
+    
+    # Obter collection do Weaviate
     collection = client.collections.get("Produtos")
-    expanded_query = expand_query_with_synonyms(query)
+    
+    # Expandir query para BM25
+    expanded_query = query  # Usando query original já que expand_query_with_synonyms não existe
 
     # 1. Recuperação de candidatos (semântica + BM25)
     try:

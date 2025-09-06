@@ -26,7 +26,6 @@ def validate_and_fix_result(result: DecompositionResult) -> DecompositionResult:
         result.itens_a_comprar = [
             ComponenteParaAquisicao(
                 nome="componente_base",
-                natureza_componente="hardware",
                 prioridade=ComponentPriority.ALTA,
                 categoria="Hardware de Servidores e Storage",
                 especificacoes_minimas={"tipo": "a_definir"},
@@ -49,11 +48,9 @@ def create_fallback_decomposition(main_request: str) -> DecompositionResult:
     return DecompositionResult(
         solucao_principal="Solução tecnológica não especificada",
         tipo_de_solucao="produto",
-        complexidade_estimada="medio",
         itens_a_comprar=[
             ComponenteParaAquisicao(
                 nome="componente_principal",
-                natureza_componente="hardware",
                 prioridade=ComponentPriority.ALTA,
                 categoria="Hardware de Servidores e Storage",
                 especificacoes_minimas={"tipo": "a_definir"},

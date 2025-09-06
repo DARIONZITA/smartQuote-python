@@ -43,19 +43,6 @@ def normalize_text(s: str) -> str:
     s = re.sub(r"\s+", " ", s).strip()
     return s
 
-def expand_query_with_synonyms(texto: str) -> str:
-    """Expande a query com sinônimos simples para melhorar BM25."""
-    base = texto or ""
-    base_norm = normalize_text(base)
-    extras: List[str] = []
-    for k, vals in SYNONYMS.items():
-        if k in base_norm:
-            extras.extend(vals)
-    if not extras:
-        return base
-    # usa separador " | " para preservar contexto ao usuário e BM25
-    return f"{base} | {' | '.join(sorted(set(extras)))}"
-
 def preprocess_termos(termos: List[str] = None) -> List[str]:
     """Divide termos por vírgula/"/" e normaliza espaços; remove vazios."""
     if not termos:

@@ -208,7 +208,7 @@ ORDER BY rejeicoes DESC;
 ```python
 # Em cotacao_manager.py
 def insert_relatorio(self, cotacao_id, analise_local, criado_por=None):
-    payload = {
+    analise_local = {
         "cotacao_id": cotacao_id,
         "analise_local": analise_local,
         "criado_por": criado_por
@@ -221,24 +221,24 @@ def insert_relatorio(self, cotacao_id, analise_local, criado_por=None):
 ```python
 # Produto aceito pela LLM
 if produto.get("llm_relatorio"):
-    payload = {
+    analise_local = {
         "query_id": qid,
         "score": produto.get("score"),
         "alternativa": False,
         "llm_relatorio": produto.get("llm_relatorio")  # 🎯 Preserva análise
     }
-    cotacao_manager.insert_relatorio(cotacao_id, [payload], criado_por)
+    cotacao_manager.insert_relatorio(cotacao_id, [analise_local], criado_por)
 
 # Produto rejeitado pela LLM
 if produto.get("llm_rejected"):
-    payload = {
+    analise_local = {
         "query_id": qid,
         "score": 0,
         "alternativa": False,
         "status": "rejeitado_por_llm",
         "llm_relatorio": produto.get("llm_relatorio")  # 🎯 Preserva análise
     }
-    cotacao_manager.insert_relatorio(cotacao_id, [payload], criado_por)
+    cotacao_manager.insert_relatorio(cotacao_id, [analise_local], criado_por)
 ```
 
 ## 📋 Status Possíveis

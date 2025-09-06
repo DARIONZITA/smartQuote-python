@@ -90,7 +90,11 @@ def gerar_queries_itens(brief: Dict[str, Any]) -> List[Dict[str, Any]]:
 
         termos_especificos = _flatten_specs_to_terms(item.get("especificacoes_minimas"))
 
-        query_sem = _semantica_join([nome] + tags + [justificativa] + ["ou"] + alternativas)
+        # Construir query semântica sem "ou" desnecessário
+        partes_query = [nome] + tags + [justificativa]
+        if alternativas:
+            partes_query.extend(["ou"] + alternativas)
+        query_sem = _semantica_join(partes_query)
         #custo beneficio para uma filtragem mais profunda contendo quantidade: x, orcamento_estimado: y, preferencia: z
         #só entra o campo de for diferente de 0
         custo_beneficio = {}

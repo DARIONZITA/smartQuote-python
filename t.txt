@@ -1,0 +1,891 @@
+    📈 Score: 42% (Sem: 60% + Txt: 15% + PC: 0% + Flt: 3%)
+ 7. Manutenção UPS                                                                                                                                     
+
+    📈 Score: 42% (Sem: 65% + Txt: 0% + PC: 0% + Flt: 3%)
+ 8. Original Dells XPS 8950 Computador Desktop 12ª Geração                                                                                             
+
+    📈 Score: 42% (Sem: 65% + Txt: 0% + PC: 0% + Flt: 3%)
+ 9. Sistema de Automação de Postos                                                                                                                     
+
+    📈 Score: 42% (Sem: 61% + Txt: 10% + PC: 0% + Flt: 3%)
+10. IMPRESSORA OFFICEJET PRO 8123 (20/10) ADF DUPLEX                                                                                                   
+
+    📈 Score: 41% (Sem: 62% + Txt: 2% + PC: 0% + Flt: 3%)
+
+🔍 Estes produtos serão enviados para análise LLM para verificar se atendem aos critérios específicos da solicitação.
+2025-09-05 23:40:56,618 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[LLM] Resposta bruta (JSON): '{
+   "index": -1,
+   "relatorio": {
+       "escolha_principal": null,
+       "justificativa_escolha": "Nenhum dos candidatos possui relevância mínima para a solicitação de um MacBook.",
+       "top_ranking": [
+           {
+               "posicao": 1,
+               "id": 240,
+               "nome": "13inch macbook pro 2020 m1 A2338 16G +512G SSD In Stock for hot Sale",
+               "preco": "5256917805535.0",
+               "justificativa": "O único produto que se assemelha à solicitação, mas seu preço é extremamente alto e pode não ser viável.",
+               "pontos_fortes": ["Corresponde à categoria de notebook"],
+               "pontos_fracos": ["Preço extremamente alto"],
+               "score_estimado": 0.2
+           }
+       ],
+       "criterios_avaliacao": {
+           "correspondencia_tipo": "Falhou. Nenhum candidato elegível foi encontrado.",
+           "especificacoes": "Nenhum dos candidatos atende às especificações de ser um MacBook.",
+           "custo_beneficio": "O único candidato relevante tem um preço extremamente alto.",
+           "disponibilidade": "O estoque do único candidato relevante é de 200 unidades."
+       }
+   }
+}'
+[LLM] ⚠️ LLM rejeitou todos os candidatos.
+2025-09-05 23:40:56,627 - __main__ - INFO - 🧠 [LLM] Resultado para Q3: índice=-1, relatório=4 campos
+2025-09-05 23:40:56,629 - __main__ - INFO - ❌ LLM não encontrou match adequado para Q3
+2025-09-05 23:40:56,630 - __main__ - INFO - 📌 Top 1 para Q3:
+2025-09-05 23:40:56,631 - __main__ - INFO -   1. N/A - Score: 0.000
+2025-09-05 23:40:56,632 - __main__ - INFO - ✅ Todas as queries principais encontraram resultados!
+2025-09-05 23:40:56,634 - __main__ - INFO - ⚙️ Criando cotações (modo automático)...
+📝 Prompt criado via API: id=1389
+🧾 Cotação criada via API: id=366
+2025-09-05 23:40:58,844 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:40:59,221 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios "HTTP/2 201 Created"
+📝 Relatório criado: id=117
+2025-09-05 23:40:59,604 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id&cotacao_id=eq.366&produto_id=eq.193&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:40:59,979 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"
+🧾 Item de cotação criado: id=521
+2025-09-05 23:41:00,348 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:00,721 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:01,084 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:01,448 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:01,451 - __main__ - INFO - 📝 Relatório LLM preservado para query Q2 (produtos rejeitados)
+2025-09-05 23:41:01,830 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"
+🧾 Item de cotação criado: id=522
+2025-09-05 23:41:02,210 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:02,591 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:02,965 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:02,971 - __main__ - INFO - 📝 Item faltante criado para produto rejeitado pela LLM: Servidor
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+🧾 Item de cotação criado: id=523
+2025-09-05 23:41:04,445 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:04,812 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"       
+2025-09-05 23:41:05,185 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"       
+2025-09-05 23:41:05,188 - __main__ - INFO - 📝 Item faltante criado para produto rejeitado pela LLM: MacBook
+2025-09-05 23:41:05,542 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id%2Cstatus&cotacao_id=eq.366&status=eq.False&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+🧾 Item de cotação criado: id=523
+2025-09-05 23:41:04,445 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:04,812 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"       
+2025-09-05 23:41:05,185 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"       
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+🧾 Item de cotação criado: id=523
+2025-09-05 23:41:04,445 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+🧾 Item de cotação criado: id=523
+2025-09-05 23:41:04,445 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantida2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+🧾 Item de cotação criado: id=523
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:03,335 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.366&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:03,712 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.117 "HTTP/2 200 OK"     
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+📝 Relatório atualizado: id=117
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+2025-09-05 23:41:03,716 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+2025-09-05 23:41:04,085 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+🧾 Item de cotação criado: id=523
+2025-09-05 23:41:04,445 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.366 "HTTP/2 200 OK"
+2025-09-05 23:41:04,812 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"       
+2025-09-05 23:41:05,185 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"       
+2025-09-05 23:41:05,188 - __main__ - INFO - 📝 Item faltante criado para produto rejeitado pela LLM: MacBook
+2025-09-05 23:41:05,542 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id%2Cstatus&cotacao_id=eq.366&status=eq.False&limit=1 "HTTP/2 200 OK"
+2025-09-05 23:41:05,910 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.366 "HTTP/2 200 OK"       
+2025-09-05 23:41:05,916 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:41:05] "POST /process-interpretation HTTP/1.1" 200 -
+2025-09-05 23:55:16,566 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:55:16] "GET /health HTTP/1.1" 200 -
+2025-09-05 23:55:26,469 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:55:26] "GET /health HTTP/1.1" 200 -
+2025-09-05 23:55:33,488 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:55:33] "GET /health HTTP/1.1" 200 -
+2025-09-05 23:55:40,569 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:55:40] "GET /health HTTP/1.1" 200 -
+2025-09-05 23:55:57,739 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:55:57] "GET /health HTTP/1.1" 200 -
+2025-09-05 23:56:13,691 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:56:13] "GET /health HTTP/1.1" 200 -
+2025-09-05 23:56:26,978 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:56:26] "GET /health HTTP/1.1" 200 -
+2025-09-05 23:56:38,099 - werkzeug - INFO - 127.0.0.1 - - [05/Sep/2025 23:56:38] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:04:22,057 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:04:22] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:07:32,166 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:07:32] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:08:23,945 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:08:23] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:08:24,416 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/produtos?select=%2A "HTTP/2 200 OK"
+2025-09-06 00:08:24,427 - __main__ - INFO - 🔄 Sincronizando 1 novos produtos do Supabase
+🔄 Indexando 1 produtos...
+2025-09-06 00:08:25,943 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 00:08:26,615 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+2025-09-06 00:08:27,508 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 00:08:28,220 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+2025-09-06 00:08:30,199 - httpx - INFO - HTTP Request: POST https://ylwtqkqjsfstdhecszyr5a.c0.us-west3.gcp.weaviate.cloud/v1/objects "HTTP/1.1 200 OK"
+✔ Produto novo indexado: Servidor em Rack FusionServer 1288H V6 1288HV6 com alta densidade e implantação flexível                                      
+                                                                                                                                  (id=242)
+✅ Indexação concluída: 1 sucessos, 0 falhas
+2025-09-06 00:08:30,353 - __main__ - INFO - 🤖 Decompondo solicitação...
+
+🤖 INICIANDO DECOMPOSIÇÃO DA SOLICITAÇÃO:
+📝 Texto original: computador e um servidor e um macbook
+------------------------------------------------------------
+2025-09-06 00:08:32,746 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+
+============================================================
+📋 YAML RETORNADO PELA LLM:
+------------------------------------------------------------
+solucao_principal: "Aquisição de equipamentos de TI: computador, servidor e MacBook"
+tipo_de_solucao: "sistema"
+complexidade_estimada: "medio"
+itens_a_comprar:
+  - nome: "Computador"
+    natureza_componente: "hardware"
+    prioridade: "media"
+    categoria: "Hardware de Posto de Trabalho"
+    especificacoes_minimas: {}
+    justificativa: "Requisito básico para operações de escritório."
+    tags: []
+    alternativas: []
+    quantidade: 1
+    orcamento_estimado: 0
+    preferencias_usuario: []
+    rigor: 0
+  - nome: "Servidor"
+    natureza_componente: "hardware"
+    prioridade: "media"
+    categoria: "Hardware de Servidores e Storage"
+    especificacoes_minimas: {}
+    justificativa: "Requisito básico para hospedagem de serviços."
+    tags: []
+    alternativas: []
+    quantidade: 1
+    orcamento_estimado: 0
+    preferencias_usuario: []
+    rigor: 0
+  - nome: "MacBook"
+    natureza_componente: "hardware"
+    prioridade: "media"
+    categoria: "Hardware de Posto de Trabalho"
+    especificacoes_minimas: {}
+    justificativa: "Requisito básico para mobilidade e produtividade."
+    tags: []
+    alternativas: []
+    quantidade: 1
+    orcamento_estimado: 0
+    preferencias_usuario: []
+    rigor: 0
+prazo_implementacao_dias: 0
+============================================================
+
+✅ DECOMPOSIÇÃO CONCLUÍDA COM SUCESSO!
+📌 Solução Principal: Aquisição de equipamentos de TI: computador, servidor e MacBook
+🔧 Tipo de Solução: sistema
+📦 Itens a Comprar: 3 itens
+------------------------------------------------------------
+
+🔄 PROCESSANDO COMPONENTES DO BRIEF...
+✅ BRIEF GERADO COM SUCESSO!
+📊 Resumo do Brief:
+   - Itens a comprar: 3
+------------------------------------------------------------
+
+2025-09-06 00:08:32,767 - __main__ - INFO - 🧩 3 queries geradas a partir do brief
+2025-09-06 00:08:32,767 - __main__ - INFO - ➡️ Executando Q1 [item] | Query: Computador | Requisito básico para operações de escritório.
+2025-09-06 00:08:32,768 - __main__ - INFO - Filtros: {'categoria': 'Hardware de Posto de Trabalho', 'palavras_chave': None}
+
+--- BUSCA HÍBRIDA PONDERADA 'Computador | Requisito básico para operações de escritório.' em vetor_portugues com filtros ponderados: {'categoria': 'Hardware de Posto de Trabalho', 'palavras_chave': None} ---
+2025-09-06 00:08:33,631 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 00:08:34,334 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+
+📊 Encontrados 10 produtos candidatos no banco de dados:
+ 1. Original Dells XPS 8950 Computador Desktop 12ª Geração                                                                                             
+
+    📈 Score: 41% (Sem: 59% + Txt: 13% + PC: 0% + Flt: 3%)
+ 2. Serviço Técnico Impressão                                                                                                                          
+
+    📈 Score: 40% (Sem: 62% + Txt: 0% + PC: 0% + Flt: 3%)
+ 3. Manutenção UPS                                                                                                                                     
+
+    📈 Score: 40% (Sem: 62% + Txt: 0% + PC: 0% + Flt: 3%)
+ 4. Plataforma Business Intelligence                                                                                                                   
+
+    📈 Score: 40% (Sem: 62% + Txt: 0% + PC: 0% + Flt: 3%)
+ 5. Instalação de Cablagem                                                                                                                             
+
+    📈 Score: 40% (Sem: 61% + Txt: 0% + PC: 0% + Flt: 3%)
+ 6. Manutenção Equipamentos Bancários                                                                                                                  
+
+    📈 Score: 39% (Sem: 61% + Txt: 0% + PC: 0% + Flt: 3%)
+ 7. Solução Cloud Empresarial                                                                                                                          
+
+    📈 Score: 39% (Sem: 60% + Txt: 0% + PC: 0% + Flt: 3%)
+ 8. Sistema de Automação de Postos                                                                                                                     
+
+    📈 Score: 38% (Sem: 58% + Txt: 0% + PC: 0% + Flt: 3%)
+ 9. APC Back-UPS Pro 1500VA                                                                                                                            
+
+    📈 Score: 37% (Sem: 58% + Txt: 0% + PC: 0% + Flt: 3%)
+10. Proteção Cibersegurança Completa                                                                                                                   
+
+    📈 Score: 36% (Sem: 55% + Txt: 0% + PC: 0% + Flt: 3%)
+
+🔍 Estes produtos serão enviados para análise LLM para verificar se atendem aos critérios específicos da solicitação.
+2025-09-06 00:08:36,833 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[LLM] Resposta bruta (JSON): '{
+   "index":0,
+   "relatorio":{
+      "escolha_principal":"Original Dells XPS 8950 Computador Desktop 12ª Geração",
+      "justificativa_escolha":"O produto escolhido cumpre os requisitos básicos para operações de escritório e tem especificações avançadas para atender às necessidades da empresa.",
+      "top_ranking":[
+         {
+            "posicao":1,
+            "id":193,
+            "nome":"Original Dells XPS 8950 Computador Desktop 12ª Geração",
+            "preco":"15263500.0",
+            "justificativa":"O produto oferece uma boa relação custo-benefício, considerando suas especificações e o fato de ser um computador de escritório de alta qualidade.",
+            "pontos_fortes":[
+               "Especificação avançada",
+               "Qualidade do fabricante",
+               "Atende às necessidades de escritório"
+            ],
+            "pontos_fracos":[
+               "Preço elevado"
+            ],
+            "score_estimado":8.5
+         }
+      ],
+      "criterios_avaliacao":{
+         "correspondencia_tipo":"Elegível",
+         "especificacoes":"Atende às necessidades básicas de operações de escritório",
+         "custo_beneficio":"A relação custo-benefício é boa, considerando as especificações do produto",
+         "disponibilidade":"O produto está disponível em estoque"
+      }
+   }
+}'
+[LLM] ✅ JSON recebido e válido - Índice escolhido: 0
+2025-09-06 00:08:36,846 - __main__ - INFO - 🧠 [LLM] Resultado para Q1: índice=0, relatório=5 campos
+2025-09-06 00:08:36,847 - __main__ - INFO - 🎯 Índice escolhido pela LLM: 0 - Original Dells XPS 8950 Computador Desktop 12ª Geração                   
+                                                                                                                                                       
+
+2025-09-06 00:08:36,848 - __main__ - INFO - 📌 Top 1 para Q1:
+2025-09-06 00:08:36,850 - __main__ - INFO -   1. Original Dells XPS 8950 Computador Desktop 12ª Geração                                                
+                                                                                                                                                       
+   - Score: 0.415
+2025-09-06 00:08:36,850 - __main__ - INFO - ➡️ Executando Q2 [item] | Query: Servidor | Requisito básico para hospedagem de serviços.
+2025-09-06 00:08:36,851 - __main__ - INFO - Filtros: {'categoria': 'Hardware de Servidores e Storage', 'palavras_chave': None}
+
+--- BUSCA HÍBRIDA PONDERADA 'Servidor | Requisito básico para hospedagem de serviços.' em vetor_portugues com filtros ponderados: {'categoria': 'Hardware de Servidores e Storage', 'palavras_chave': None} ---
+2025-09-06 00:08:37,552 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 00:08:38,260 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+
+📊 Encontrados 10 produtos candidatos no banco de dados:
+ 1. Solução Cloud Empresarial                                                                                                                          
+
+    📈 Score: 46% (Sem: 70% + Txt: 2% + PC: 0% + Flt: 3%)
+ 2. Manutenção UPS                                                                                                                                     
+
+    📈 Score: 44% (Sem: 68% + Txt: 0% + PC: 0% + Flt: 3%)
+ 3. Servidor em Rack FusionServer 1288H V6 1288HV6 com alta densidade e implantação flexível                                                           
+
+    📈 Score: 44% (Sem: 63% + Txt: 13% + PC: 0% + Flt: 3%)
+ 4. Plataforma Business Intelligence                                                                                                                   
+
+    📈 Score: 43% (Sem: 66% + Txt: 0% + PC: 0% + Flt: 3%)
+ 5. Proteção Cibersegurança Completa                                                                                                                   
+
+    📈 Score: 41% (Sem: 63% + Txt: 0% + PC: 0% + Flt: 3%)
+ 6. APC Back-UPS Pro 1500VA                                                                                                                            
+
+    📈 Score: 40% (Sem: 61% + Txt: 0% + PC: 0% + Flt: 3%)
+ 7. Instalação de Cablagem                                                                                                                             
+
+    📈 Score: 40% (Sem: 61% + Txt: 0% + PC: 0% + Flt: 3%)
+ 8. 13inch macbook pro 2020 m1 A2338 16G +512G SSD In Stock for hot Sale                                                                               
+
+    📈 Score: 38% (Sem: 58% + Txt: 0% + PC: 0% + Flt: 3%)
+ 9. Original Dells XPS 8950 Computador Desktop 12ª Geração                                                                                             
+
+    📈 Score: 38% (Sem: 58% + Txt: 0% + PC: 0% + Flt: 3%)
+10. Manutenção Equipamentos Bancários                                                                                                                  
+
+    📈 Score: 37% (Sem: 57% + Txt: 0% + PC: 0% + Flt: 3%)
+
+🔍 Estes produtos serão enviados para análise LLM para verificar se atendem aos critérios específicos da solicitação.
+2025-09-06 00:08:40,925 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[LLM] Resposta bruta (JSON): '{
+   "index":2,
+   "relatorio":{
+      "escolha_principal":"Servidor em Rack FusionServer 1288H V6 1288HV6 com alta densidade e implantação flexível",
+      "justificativa_escolha":"Este servidor é um dos poucos que se encaixam na categoria de hardware de servidores e storage, que foi o filtro principal da busca. Além disso, o seu nome e descrição sugerem que é um servidor em rack, o que é uma boa opção para hospedagem de serviços.",
+      "top_ranking":[
+         {
+            "posicao":1,
+            "id":242,
+            "nome":"Servidor em Rack FusionServer 1288H V6 1288HV6 com alta densidade e implantação flexível",
+            "preco":"1194652207.0",
+            "justificativa":"Servidor em rack com alta densidade e flexibilidade, ideal para hospedagem de serviços",
+            "pontos_fortes":[
+               "Alta densidade",
+               "Implantação flexível"
+            ],
+            "pontos_fracos":[
+               "Preço elevado"
+            ],
+            "score_estimado":0.8
+         }
+      ],
+      "criterios_avaliacao":{
+         "correspondencia_tipo":"Alguns candidatos correspondem ao tipo de produto buscado, mas apenas um foi considerado elegível",
+         "especificacoes":"A especificação de alta densidade e implantação flexível foi um fator importante na escolha do servidor",
+         "custo_beneficio":"O preço do servidor é elevado, mas a sua capacidade e flexibilidade justificam o custo",
+         "disponibilidade":"O servidor está disponível em estoque"
+      }
+   }
+}'
+[LLM] ✅ JSON recebido e válido - Índice escolhido: 2
+2025-09-06 00:08:40,934 - __main__ - INFO - 🧠 [LLM] Resultado para Q2: índice=2, relatório=5 campos
+2025-09-06 00:08:40,935 - __main__ - INFO - 🎯 Índice escolhido pela LLM: 2 - Servidor em Rack FusionServer 1288H V6 1288HV6 com alta densidade e implantação flexível                                                                                                                                        
+
+2025-09-06 00:08:40,936 - __main__ - INFO - 📌 Top 1 para Q2:
+2025-09-06 00:08:40,938 - __main__ - INFO -   1. Servidor em Rack FusionServer 1288H V6 1288HV6 com alta densidade e implantação flexível              
+                                                                                                                                                       
+   - Score: 0.440
+2025-09-06 00:08:40,938 - __main__ - INFO - ➡️ Executando Q3 [item] | Query: MacBook | Requisito básico para mobilidade e produtividade.
+2025-09-06 00:08:40,940 - __main__ - INFO - Filtros: {'categoria': 'Hardware de Posto de Trabalho', 'palavras_chave': None}
+
+--- BUSCA HÍBRIDA PONDERADA 'MacBook | Requisito básico para mobilidade e produtividade.' em vetor_portugues com filtros ponderados: {'categoria': 'Hardware de Posto de Trabalho', 'palavras_chave': None} ---
+2025-09-06 00:08:41,650 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 00:08:42,377 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+
+📊 Encontrados 10 produtos candidatos no banco de dados:
+ 1. APC Back-UPS Pro 1500VA                                                                                                                            
+
+    📈 Score: 42% (Sem: 65% + Txt: 0% + PC: 0% + Flt: 3%)
+ 2. Plataforma Business Intelligence                                                                                                                   
+
+    📈 Score: 42% (Sem: 64% + Txt: 0% + PC: 0% + Flt: 3%)
+ 3. 13inch macbook pro 2020 m1 A2338 16G +512G SSD In Stock for hot Sale                                                                               
+
+    📈 Score: 42% (Sem: 60% + Txt: 12% + PC: 0% + Flt: 3%)
+ 4. Original Dells XPS 8950 Computador Desktop 12ª Geração                                                                                             
+
+    📈 Score: 40% (Sem: 62% + Txt: 0% + PC: 0% + Flt: 3%)
+ 5. Solução Cloud Empresarial                                                                                                                          
+
+    📈 Score: 40% (Sem: 62% + Txt: 0% + PC: 0% + Flt: 3%)
+ 6. Manutenção UPS                                                                                                                                     
+
+    📈 Score: 39% (Sem: 60% + Txt: 0% + PC: 0% + Flt: 3%)
+ 7. PC DELL OPTIPLEX 5000 MT (I5-12500 16GB 256GB SSD W11P)                                                                                            
+
+    📈 Score: 39% (Sem: 59% + Txt: 0% + PC: 0% + Flt: 3%)
+ 8. Serviço Técnico Impressão                                                                                                                          
+
+    📈 Score: 38% (Sem: 58% + Txt: 0% + PC: 0% + Flt: 3%)
+ 9. Servidor em Rack FusionServer 1288H V6 1288HV6 com alta densidade e implantação flexível                                                           
+
+    📈 Score: 38% (Sem: 58% + Txt: 0% + PC: 0% + Flt: 3%)
+10. hp Elitebook 840 G5 I5-8th Gen 8GB Ram Used Laptops Core Win10 14inch Second Hand Laptop Portable Business Computer Desktops                       
+
+    📈 Score: 37% (Sem: 57% + Txt: 0% + PC: 0% + Flt: 3%)
+
+🔍 Estes produtos serão enviados para análise LLM para verificar se atendem aos critérios específicos da solicitação.
+2025-09-06 00:08:44,308 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[LLM] Resposta bruta (JSON): '{
+   "index": -1,
+   "relatorio": {
+       "escolha_principal": null,
+       "justificativa_escolha": "Nenhum dos candidatos corresponde ao requisito de 'MacBook' para mobilidade e produtividade.",
+       "top_ranking": [],
+       "criterios_avaliacao": {
+           "correspondencia_tipo": "Falhou. Nenhum candidato correspondia ao tipo de produto procurado.",
+           "especificacoes": null,
+           "custo_beneficio": null,
+           "disponibilidade": null
+       }
+   }
+}'
+[LLM] ⚠️ LLM rejeitou todos os candidatos.
+2025-09-06 00:08:44,316 - __main__ - INFO - 🧠 [LLM] Resultado para Q3: índice=-1, relatório=4 campos
+2025-09-06 00:08:44,317 - __main__ - INFO - ❌ LLM não encontrou match adequado para Q3
+2025-09-06 00:08:44,318 - __main__ - INFO - 📌 Top 1 para Q3:
+2025-09-06 00:08:44,319 - __main__ - INFO -   1. N/A - Score: 0.000
+2025-09-06 00:08:44,322 - __main__ - INFO - ✅ Todas as queries principais encontraram resultados!
+2025-09-06 00:08:44,323 - __main__ - INFO - ⚙️ Criando cotações (modo automático)...
+📝 Prompt criado via API: id=1390
+🧾 Cotação criada via API: id=367
+2025-09-06 00:08:46,731 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.367&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-06 00:08:47,123 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios "HTTP/2 201 Created"
+📝 Relatório criado: id=118
+2025-09-06 00:08:47,490 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id&cotacao_id=eq.367&produto_id=eq.193&limit=1 "HTTP/2 200 OK"
+2025-09-06 00:08:47,888 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"
+🧾 Item de cotação criado: id=524
+2025-09-06 00:08:48,247 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.367 "HTTP/2 200 OK"
+2025-09-06 00:08:48,610 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.367 "HTTP/2 200 OK"
+2025-09-06 00:08:48,957 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.367&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-06 00:08:49,318 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.118 "HTTP/2 200 OK"
+📝 Relatório atualizado: id=118
+2025-09-06 00:08:49,670 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id&cotacao_id=eq.367&produto_id=eq.242&limit=1 "HTTP/2 200 OK"
+2025-09-06 00:08:50,033 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"
+🧾 Item de cotação criado: id=525
+2025-09-06 00:08:50,404 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.367 "HTTP/2 200 OK"
+2025-09-06 00:08:50,760 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.367 "HTTP/2 200 OK"
+2025-09-06 00:08:51,120 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.367&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-06 00:08:51,485 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.118 "HTTP/2 200 OK"
+📝 Relatório atualizado: id=118
+2025-09-06 00:08:51,487 - __main__ - INFO - 📝 Relatório LLM preservado para query Q3 (produtos rejeitados)
+2025-09-06 00:08:51,842 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"
+🧾 Item de cotação criado: id=526
+2025-09-06 00:08:52,201 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.367 "HTTP/2 200 OK"
+2025-09-06 00:08:52,552 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.367 "HTTP/2 200 OK"
+2025-09-06 00:08:52,907 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.367 "HTTP/2 200 OK"
+2025-09-06 00:08:52,912 - __main__ - INFO - 📝 Item faltante criado para produto rejeitado pela LLM: MacBook
+2025-09-06 00:08:53,270 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id%2Cstatus&cotacao_id=eq.367&status=eq.False&limit=1 "HTTP/2 200 OK"
+2025-09-06 00:08:53,615 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.367 "HTTP/2 200 OK"
+2025-09-06 00:08:53,618 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:08:53] "POST /process-interpretation HTTP/1.1" 200 -
+2025-09-06 00:20:19,729 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:20:19] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:21:04,030 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:21:04] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:21:49,813 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:21:49] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:26:31,228 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:26:31] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:27:41,007 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:27:41] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:28:04,498 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:28:04] "GET /health HTTP/1.1" 200 -
+2025-09-06 00:33:15,806 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 00:33:15] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:06:13,494 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:06:13] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:07:11,488 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:07:11] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:12:34,721 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:12:34] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:15:06,846 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:15:06] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:15:26,116 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:15:26] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:15:35,949 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:15:35] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:15:44,458 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:15:44] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:15:54,000 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:15:54] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:16:01,285 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:16:01] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:16:07,718 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:16:07] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:19:52,903 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:19:52] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:24:52,989 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:24:52] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:27:16,916 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:27:16] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:30:33,367 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:30:33] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:30:59,331 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:30:59] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:31:36,884 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:31:36] "GET /health HTTP/1.1" 200 -
+2025-09-06 06:31:44,448 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 06:31:44] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:17:36,951 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:17:36] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:17:40,563 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:17:40] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:21:01,656 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:21:01] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:21:23,032 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:21:23] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:21:36,451 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:21:36] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:21:52,130 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:21:52] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:22:13,796 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:22:13] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:27:26,267 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:27:26] "GET /health HTTP/1.1" 200 -
+2025-09-06 07:27:27,016 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/produtos?select=%2A "HTTP/2 200 OK"
+2025-09-06 07:27:27,128 - __main__ - INFO - 🔄 Sincronizando 1 novos produtos do Supabase
+🔄 Indexando 1 produtos...
+2025-09-06 07:27:29,006 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 07:27:29,751 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+2025-09-06 07:27:34,570 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 07:27:35,267 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+2025-09-06 07:27:38,106 - httpx - INFO - HTTP Request: POST https://ylwtqkqjsfstdhecszyr5a.c0.us-west3.gcp.weaviate.cloud/v1/objects "HTTP/1.1 200 OK"
+✔ Produto novo indexado: MacBook Air 13" M2 8CPU/10GPU 512GB STARLIGHT                                                                                 
+                                                                                                                                  (id=243)
+✅ Indexação concluída: 1 sucessos, 0 falhas
+2025-09-06 07:27:38,171 - __main__ - INFO - 🤖 Decompondo solicitação...
+
+🤖 INICIANDO DECOMPOSIÇÃO DA SOLICITAÇÃO:
+📝 Texto original: computador e um servidor e um macbook
+------------------------------------------------------------
+2025-09-06 07:27:40,412 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+
+============================================================
+📋 YAML RETORNADO PELA LLM:
+------------------------------------------------------------
+solucao_principal: "Provisionamento de infraestrutura de TI com computador, servidor e MacBook"
+tipo_de_solucao: "sistema"
+complexidade_estimada: "medio"
+itens_a_comprar:
+  - nome: "Computador"
+    natureza_componente: "hardware"
+    prioridade: "critica"
+    categoria: "Hardware de Posto de Trabalho"
+    especificacoes_minimas: {}
+    justificativa: "Necessário para operações de TI"
+    tags: []
+    alternativas: []
+    quantidade: 1
+    orcamento_estimado: 0
+    preferencias_usuario: []
+    rigor: 0
+  - nome: "Servidor"
+    natureza_componente: "hardware"
+    prioridade: "critica"
+    categoria: "Hardware de Servidores e Storage"
+    especificacoes_minimas: {}
+    justificativa: "Necessário para operações de TI"
+    tags: []
+    alternativas: []
+    quantidade: 1
+    orcamento_estimado: 0
+    preferencias_usuario: []
+    rigor: 0
+  - nome: "MacBook"
+    natureza_componente: "hardware"
+    prioridade: "critica"
+    categoria: "Hardware de Posto de Trabalho"
+    especificacoes_minimas: {}
+    justificativa: "Necessário para operações de TI"
+    tags: []
+    alternativas: []
+    quantidade: 1
+    orcamento_estimado: 0
+    preferencias_usuario: []
+    rigor: 0
+prazo_implementacao_dias: 0
+============================================================
+
+✅ DECOMPOSIÇÃO CONCLUÍDA COM SUCESSO!
+📌 Solução Principal: Provisionamento de infraestrutura de TI com computador, servidor e MacBook
+🔧 Tipo de Solução: sistema
+📦 Itens a Comprar: 3 itens
+------------------------------------------------------------
+
+🔄 PROCESSANDO COMPONENTES DO BRIEF...
+✅ BRIEF GERADO COM SUCESSO!
+📊 Resumo do Brief:
+   - Itens a comprar: 3
+------------------------------------------------------------
+
+2025-09-06 07:27:40,466 - __main__ - INFO - 🧩 3 queries geradas a partir do brief
+2025-09-06 07:27:40,467 - __main__ - INFO - ➡️ Executando Q1 [item] | Query: Computador | Necessário para operações de TI
+2025-09-06 07:27:40,467 - __main__ - INFO - Filtros: {'categoria': 'Hardware de Posto de Trabalho', 'palavras_chave': None}
+
+--- BUSCA HÍBRIDA PONDERADA 'Computador | Necessário para operações de TI' em vetor_portugues com filtros ponderados: {'categoria': 'Hardware de Posto de Trabalho', 'palavras_chave': None} ---
+2025-09-06 07:27:41,199 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 07:27:41,867 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+
+📊 Encontrados 10 produtos candidatos no banco de dados:
+ 1. Solução Cloud Empresarial                                                                                                                          
+
+    📈 Score: 46% (Sem: 70% + Txt: 0% + PC: 0% + Flt: 3%)
+ 2. Original Dells XPS 8950 Computador Desktop 12ª Geração                                                                                             
+
+    📈 Score: 45% (Sem: 63% + Txt: 17% + PC: 0% + Flt: 3%)
+ 3. Plataforma Business Intelligence                                                                                                                   
+
+    📈 Score: 45% (Sem: 69% + Txt: 0% + PC: 0% + Flt: 3%)
+ 4. Serviço Técnico Impressão                                                                                                                          
+
+    📈 Score: 43% (Sem: 64% + Txt: 10% + PC: 0% + Flt: 3%)
+ 5. Sistema de Automação de Postos                                                                                                                     
+
+    📈 Score: 43% (Sem: 63% + Txt: 10% + PC: 0% + Flt: 3%)
+ 6. Manutenção Equipamentos Bancários                                                                                                                  
+
+    📈 Score: 43% (Sem: 65% + Txt: 2% + PC: 0% + Flt: 3%)
+ 7. Manutenção UPS                                                                                                                                     
+
+    📈 Score: 43% (Sem: 66% + Txt: 0% + PC: 0% + Flt: 3%)
+ 8. Instalação de Cablagem                                                                                                                             
+
+    📈 Score: 42% (Sem: 64% + Txt: 2% + PC: 0% + Flt: 3%)
+ 9. Proteção Cibersegurança Completa                                                                                                                   
+
+    📈 Score: 40% (Sem: 62% + Txt: 0% + PC: 0% + Flt: 3%)
+10. PC DELL OPTIPLEX 5000 MT (I5-12500 16GB 256GB SSD W11P)                                                                                            
+
+    📈 Score: 40% (Sem: 57% + Txt: 15% + PC: 0% + Flt: 3%)
+
+🔍 Estes produtos serão enviados para análise LLM para verificar se atendem aos critérios específicos da solicitação.
+2025-09-06 07:27:45,703 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[LLM] Resposta bruta (JSON): '{
+   "index":1,
+   "relatorio":{
+      "escolha_principal":"Original Dells XPS 8950 Computador Desktop 12ª Geração",
+      "justificativa_escolha":"Mesmo com um preço alto, esta é a única opção que combina a categoria de Hardware de Posto de Trabalho com as características de um desktop profissional para operações de TI.",
+      "top_ranking":[
+         {
+            "posicao":1,
+            "id":193,
+            "nome":"Original Dells XPS 8950 Computador Desktop 12ª Geração",
+            "preco":"15263500.0",
+            "justificativa":"Excelente escolha para operações de TI devido à sua potência de processamento e capacidade de armazenamento, apesar do alto custo.",
+            "pontos_fortes":[
+               "Potente processador i9-12900K",
+               "Adequado para operações de TI que exigem desempenho"
+            ],
+            "pontos_fracos":[
+               "Preço extremamente alto"
+            ],
+            "score_estimado":9.0
+         },
+         {
+            "posicao":2,
+            "id":192,
+            "nome":"PC DELL OPTIPLEX 5000 MT (I5-12500 16GB 256GB SSD W11P)",
+            "preco":"15782125800.0",
+            "justificativa":"Embora seja uma opção potente, o preço é proibitivamente alto e não se alinha bem com a categoria ou descrição inicial.", 
+            "pontos_fortes":[
+               "Processador Intel Core i5-12500",
+               "Configuração de 16GB RAM e 256GB SSD"
+            ],
+            "pontos_fracos":[
+               "Preço excessivamente alto",
+               "Não se ajusta perfeitamente à categoria ou descrição"
+            ],
+            "score_estimado":8.5
+         }
+      ],
+      "criterios_avaliacao":{
+         "correspondencia_tipo":"Parcialmente correspondente, pois apenas alguns produtos são diretamente relacionados à categoria de Hardware de Posto de Trabalho.",
+         "especificacoes":"Nenhuma das opções oferece uma correspondência perfeita com as especificações de um computador para operações de TI, devido ao Rigor baixo.",
+         "custo_beneficio":"O custo dos produtos é extremamente alto, o que pode não ser benéfico para a maioria das operações de TI.",
+         "disponibilidade":"Disponibilidade variada, mas o estoque não é um fator crítico neste caso devido à natureza da solicitação."
+      }
+   }
+}'
+[LLM] ✅ JSON recebido e válido - Índice escolhido: 1
+2025-09-06 07:27:45,706 - __main__ - INFO - 🧠 [LLM] Resultado para Q1: índice=1, relatório=5 campos
+2025-09-06 07:27:45,706 - __main__ - INFO - 🎯 Índice escolhido pela LLM: 1 - Original Dells XPS 8950 Computador Desktop 12ª Geração                   
+                                                                                                                                                       
+
+2025-09-06 07:27:45,707 - __main__ - INFO - 📌 Top 1 para Q1:
+2025-09-06 07:27:45,707 - __main__ - INFO -   1. Original Dells XPS 8950 Computador Desktop 12ª Geração                                                
+                                                                                                                                                       
+   - Score: 0.451
+2025-09-06 07:27:45,707 - __main__ - INFO - ➡️ Executando Q2 [item] | Query: Servidor | Necessário para operações de TI
+2025-09-06 07:27:45,707 - __main__ - INFO - Filtros: {'categoria': 'Hardware de Servidores e Storage', 'palavras_chave': None}
+
+--- BUSCA HÍBRIDA PONDERADA 'Servidor | Necessário para operações de TI' em vetor_portugues com filtros ponderados: {'categoria': 'Hardware de Servidores e Storage', 'palavras_chave': None} ---
+2025-09-06 07:27:46,781 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 07:27:47,478 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+
+📊 Encontrados 10 produtos candidatos no banco de dados:
+ 1. Solução Cloud Empresarial                                                                                                                          
+
+    📈 Score: 47% (Sem: 73% + Txt: 0% + PC: 0% + Flt: 3%)
+ 2. Servidor em Rack FusionServer 1288H V6 1288HV6 com alta densidade e implantação flexível                                                           
+
+    📈 Score: 45% (Sem: 64% + Txt: 17% + PC: 0% + Flt: 3%)
+ 3. Plataforma Business Intelligence                                                                                                                   
+
+    📈 Score: 45% (Sem: 70% + Txt: 0% + PC: 0% + Flt: 3%)
+ 4. Manutenção UPS                                                                                                                                     
+
+    📈 Score: 44% (Sem: 67% + Txt: 0% + PC: 0% + Flt: 3%)
+ 5. Sistema de Automação de Postos                                                                                                                     
+
+    📈 Score: 42% (Sem: 62% + Txt: 10% + PC: 0% + Flt: 3%)
+ 6. PC DELL OPTIPLEX 5000 MT (I5-12500 16GB 256GB SSD W11P)                                                                                            
+
+    📈 Score: 41% (Sem: 59% + Txt: 15% + PC: 0% + Flt: 3%)
+ 7. APC Back-UPS Pro 1500VA                                                                                                                            
+
+    📈 Score: 41% (Sem: 63% + Txt: 0% + PC: 0% + Flt: 3%)
+ 8. Proteção Cibersegurança Completa                                                                                                                   
+
+    📈 Score: 41% (Sem: 63% + Txt: 0% + PC: 0% + Flt: 3%)
+ 9. Instalação de Cablagem                                                                                                                             
+
+    📈 Score: 41% (Sem: 62% + Txt: 2% + PC: 0% + Flt: 3%)
+10. Serviço Técnico Impressão                                                                                                                          
+
+    📈 Score: 40% (Sem: 59% + Txt: 10% + PC: 0% + Flt: 3%)
+
+🔍 Estes produtos serão enviados para análise LLM para verificar se atendem aos critérios específicos da solicitação.
+2025-09-06 07:27:49,694 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[LLM] Resposta bruta (JSON): '{
+   "index": -1,
+   "relatorio": {
+       "escolha_principal": null,
+       "justificativa_escolha": "Nenhum candidato correspondente à categoria 'Hardware de Servidores e Storage' foi encontrado",
+       "top_ranking": [],
+       "criterios_avaliacao": {
+           "correspondencia_tipo": "Falhou. Nenhum candidato de servidor ou diretamente relacionado a operações de TI foi encontrado na lista",        
+           "especificacoes": "Não aplicável devido à falta de correspondência de tipo",
+           "custo_beneficio": "Não calculado",
+           "disponibilidade": "Não avaliada"
+       }
+   }
+}'
+[LLM] ⚠️ LLM rejeitou todos os candidatos.
+2025-09-06 07:27:49,701 - __main__ - INFO - 🧠 [LLM] Resultado para Q2: índice=-1, relatório=4 campos
+2025-09-06 07:27:49,702 - __main__ - INFO - ❌ LLM não encontrou match adequado para Q2
+2025-09-06 07:27:49,703 - __main__ - INFO - 📌 Top 1 para Q2:
+2025-09-06 07:27:49,704 - __main__ - INFO -   1. N/A - Score: 0.000
+2025-09-06 07:27:49,704 - __main__ - INFO - ➡️ Executando Q3 [item] | Query: MacBook | Necessário para operações de TI
+2025-09-06 07:27:49,706 - __main__ - INFO - Filtros: {'categoria': 'Hardware de Posto de Trabalho', 'palavras_chave': None}
+
+--- BUSCA HÍBRIDA PONDERADA 'MacBook | Necessário para operações de TI' em vetor_portugues com filtros ponderados: {'categoria': 'Hardware de Posto de Trabalho', 'palavras_chave': None} ---
+2025-09-06 07:27:50,441 - httpx - INFO - HTTP Request: POST https://dnzita-smartquote.hf.space/gradio_api/queue/join "HTTP/1.1 200 OK"
+2025-09-06 07:27:51,245 - httpx - INFO - HTTP Request: GET https://dnzita-smartquote.hf.space/gradio_api/queue/data?session_hash=94c7f72b-af1d-4171-b4c4-c8ebc000496a "HTTP/1.1 200 OK"
+
+📊 Encontrados 10 produtos candidatos no banco de dados:
+ 1. Plataforma Business Intelligence                                                                                                                   
+
+    📈 Score: 45% (Sem: 70% + Txt: 0% + PC: 0% + Flt: 3%)
+ 2. Solução Cloud Empresarial                                                                                                                          
+
+    📈 Score: 44% (Sem: 68% + Txt: 0% + PC: 0% + Flt: 3%)
+ 3. Serviço Técnico Impressão                                                                                                                          
+
+    📈 Score: 44% (Sem: 65% + Txt: 10% + PC: 0% + Flt: 3%)
+ 4. APC Back-UPS Pro 1500VA                                                                                                                            
+
+    📈 Score: 44% (Sem: 67% + Txt: 0% + PC: 0% + Flt: 3%)
+ 5. 13inch macbook pro 2020 m1 A2338 16G +512G SSD In Stock for hot Sale                                                                               
+
+    📈 Score: 42% (Sem: 61% + Txt: 15% + PC: 0% + Flt: 3%)
+ 6. PC DELL OPTIPLEX 5000 MT (I5-12500 16GB 256GB SSD W11P)                                                                                            
+
+    📈 Score: 42% (Sem: 60% + Txt: 15% + PC: 0% + Flt: 3%)
+ 7. Manutenção UPS                                                                                                                                     
+
+    📈 Score: 42% (Sem: 65% + Txt: 0% + PC: 0% + Flt: 3%)
+ 8. Original Dells XPS 8950 Computador Desktop 12ª Geração                                                                                             
+
+    📈 Score: 42% (Sem: 65% + Txt: 0% + PC: 0% + Flt: 3%)
+ 9. Sistema de Automação de Postos                                                                                                                     
+
+    📈 Score: 42% (Sem: 61% + Txt: 10% + PC: 0% + Flt: 3%)
+10. MacBook Air 13" M2 8CPU/10GPU 512GB STARLIGHT                                                                                                      
+
+    📈 Score: 41% (Sem: 58% + Txt: 17% + PC: 0% + Flt: 3%)
+
+🔍 Estes produtos serão enviados para análise LLM para verificar se atendem aos critérios específicos da solicitação.
+2025-09-06 07:27:54,264 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[LLM] Resposta bruta (JSON): '{
+   "index":4,
+   "relatorio":{
+      "escolha_principal":"13inch macbook pro 2020 m1 A2338 16G +512G SSD In Stock for hot Sale",
+      "justificativa_escolha":"Este candidato atende à necessidade específica de um MacBook para operações de TI, com características como processador M1, 16GB de RAM e 512GB de SSD, que são adequadas para tarefas de TI.",
+      "top_ranking":[
+         {
+            "posicao":1,
+            "id":240,
+            "nome":"13inch macbook pro 2020 m1 A2338 16G +512G SSD In Stock for hot Sale",
+            "preco":"5256917805535.0",
+            "justificativa":"Atende à necessidade específica de um MacBook com características de processador M1, 16GB de RAM e 512GB de SSD, adequadas para tarefas de TI.",
+            "pontos_fortes":[
+               "Processador M1",
+               "16GB de RAM",
+               "512GB de SSD"
+            ],
+            "pontos_fracos":[
+               "Preço elevado"
+            ],
+            "score_estimado":0.95
+         },
+         {
+            "posicao":2,
+            "id":243,
+            "nome":"MacBook Air 13\" M2 8CPU/10GPU 512GB STARLIGHT",
+            "preco":"226100000.0",
+            "justificativa":"Também é um MacBook com características avançadas como processador M2, 8CPU, 10GPU e 512GB de SSD, mas não atende especificamente à descrição de um MacBook Pro.",
+            "pontos_fortes":[
+               "Processador M2",
+               "8CPU e 10GPU",
+               "512GB de SSD"
+            ],
+            "pontos_fracos":[
+               "Não é um MacBook Pro"
+            ],
+            "score_estimado":0.85
+         }
+      ],
+      "criterios_avaliacao":{
+         "correspondencia_tipo":"Adequado",
+         "especificacoes":"Atende às necessidades de processador, memória RAM e armazenamento.",
+         "custo_beneficio":"O preço é elevado, mas as características justificam o custo para operações de TI.",
+         "disponibilidade":"O estoque é disponível."
+      }
+   }
+}'
+[LLM] ✅ JSON recebido e válido - Índice escolhido: 4
+2025-09-06 07:27:54,268 - __main__ - INFO - 🧠 [LLM] Resultado para Q3: índice=4, relatório=5 campos
+2025-09-06 07:27:54,268 - __main__ - INFO - 🎯 Índice escolhido pela LLM: 4 - 13inch macbook pro 2020 m1 A2338 16G +512G SSD In Stock for hot Sale                                                                                                                                                            
+
+2025-09-06 07:27:54,270 - __main__ - INFO - 📌 Top 1 para Q3:
+2025-09-06 07:27:54,271 - __main__ - INFO -   1. 13inch macbook pro 2020 m1 A2338 16G +512G SSD In Stock for hot Sale                                  
+                                                                                                                                                       
+   - Score: 0.429
+2025-09-06 07:27:54,271 - __main__ - INFO - ✅ Todas as queries principais encontraram resultados!
+2025-09-06 07:27:54,271 - __main__ - INFO - ⚙️ Criando cotações (modo automático)...
+📝 Prompt criado via API: id=1391
+🧾 Cotação criada via API: id=368
+2025-09-06 07:27:56,549 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.368&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-06 07:27:57,001 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios "HTTP/2 201 Created"
+📝 Relatório criado: id=119
+2025-09-06 07:27:57,381 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id&cotacao_id=eq.368&produto_id=eq.193&limit=1 "HTTP/2 200 OK"
+2025-09-06 07:27:57,765 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"
+🧾 Item de cotação criado: id=527
+2025-09-06 07:27:58,134 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.368 "HTTP/2 200 OK"
+2025-09-06 07:27:58,566 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.368 "HTTP/2 200 OK"
+2025-09-06 07:27:59,007 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.368&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-06 07:27:59,439 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.119 "HTTP/2 200 OK"
+📝 Relatório atualizado: id=119
+2025-09-06 07:27:59,442 - __main__ - INFO - 📝 Relatório LLM preservado para query Q2 (produtos rejeitados)
+2025-09-06 07:28:00,041 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"
+🧾 Item de cotação criado: id=528
+2025-09-06 07:28:00,413 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.368 "HTTP/2 200 OK"
+2025-09-06 07:28:00,825 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.368 "HTTP/2 200 OK"
+2025-09-06 07:28:01,280 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.368 "HTTP/2 200 OK"
+2025-09-06 07:28:01,283 - __main__ - INFO - 📝 Item faltante criado para produto rejeitado pela LLM: Servidor
+2025-09-06 07:28:01,679 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?select=id%2Canalise_local&cotacao_id=eq.368&order=id.desc&limit=1 "HTTP/2 200 OK"
+2025-09-06 07:28:02,087 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/relatorios?id=eq.119 "HTTP/2 200 OK"
+📝 Relatório atualizado: id=119
+2025-09-06 07:28:02,506 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id&cotacao_id=eq.368&produto_id=eq.240&limit=1 "HTTP/2 200 OK"
+2025-09-06 07:28:02,884 - httpx - INFO - HTTP Request: POST https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens "HTTP/2 201 Created"       
+🧾 Item de cotação criado: id=529
+2025-09-06 07:28:03,283 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=item_preco%2Cquantidade&cotacao_id=eq.368 "HTTP/2 200 OK"
+2025-09-06 07:28:03,669 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.368 "HTTP/2 200 OK"       
+2025-09-06 07:28:04,129 - httpx - INFO - HTTP Request: GET https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes_itens?select=id%2Cstatus&cotacao_id=eq.368&status=eq.False&limit=1 "HTTP/2 200 OK"
+2025-09-06 07:28:04,509 - httpx - INFO - HTTP Request: PATCH https://hpkbzabbwghxlsoyvomq.supabase.co/rest/v1/cotacoes?id=eq.368 "HTTP/2 200 OK"       
+2025-09-06 07:28:04,512 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:28:04] "POST /process-interpretation HTTP/1.1" 200 -
+2025-09-06 07:52:03,565 - werkzeug - INFO - 127.0.0.1 - - [06/Sep/2025 07:52:03] "GET /health HTTP/1.1" 200 -

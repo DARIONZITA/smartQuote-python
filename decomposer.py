@@ -54,10 +54,8 @@ class SolutionDecomposer:
         2. **tipo_de_solucao**: 
         - Use "produto" para soluções em que, na aquisição, seja necessário apenas um único item ou pacote fechado, mesmo que incluam múltiplas partes internas.
         - Use "sistema" para soluções compostas por múltiplos elementos que precisam ser adquiridos separadamente, ou pedido de varios produtos.
-        3. **complexidade_estimada**: Um dos seguintes valores: **"simples"**, **"medio"**, **"complexo"**.
-        4. **itens_a_comprar**: Lista de itens ("hardware", "software" ou "servico") que devem ser adquiridos separadamente para compor a solução (primeiro item sendo o principal), cada um com:
+        3. **itens_a_comprar**: Lista de itens ("hardware", "software" ou "servico") que devem ser adquiridos separadamente para compor a solução (primeiro item sendo o principal), cada um com:
         - **nome**: pode ser geral como "Computador", "Impressora" ou específico como "Impressora HP LaserJet" dependendo da necessidade do cliente.
-        - **natureza_componente**: "hardware", "software" ou "servico"
         - **prioridade**: "critica", "alta", "media" ou "baixa" (tudo especificado pelo usuário e partes imprescindíveis é "critica" ou "alta")
         - **categoria**: categoria do componente tendo apenas as seguintes opções:
             - Hardware de Servidores e Storage, Hardware de Posto de Trabalho, Serviços de Cloud, Networking
@@ -79,7 +77,7 @@ class SolutionDecomposer:
             - 3 = moderadamente específico, margem de flexibilidade
             - 4 = quase fechado, pequenas variações possíveis
             - 5 = rígido, modelo exato exigido
-        5. **prazo_implementacao_dias**: número inteiro com a estimativa de dias (se não especificado: 0)
+        4. **prazo_implementacao_dias**: número inteiro com a estimativa de dias (se não especificado: 0)
        
         ---
 
@@ -100,7 +98,7 @@ class SolutionDecomposer:
                     {"role": "system", "content": decomposition_prompt},
                     {"role": "user", "content": main_request}
                 ],
-                temperature=0.1,
+                temperature=0.05,
                 max_tokens=8000,
                 stream=False
             )
@@ -170,7 +168,6 @@ class SolutionDecomposer:
         for comp in result.itens_a_comprar:
             itens.append({
                 "nome": comp.nome,
-                "natureza_componente": comp.natureza_componente,
                 "prioridade": comp.prioridade.value if isinstance(comp.prioridade, Enum) else str(comp.prioridade),
                 "categoria": comp.categoria,
                 "especificacoes_minimas": comp.especificacoes_minimas,

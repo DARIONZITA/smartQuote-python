@@ -26,7 +26,7 @@
 
 ### 🏢 **Para Integração em Produção**
 1. **[🏠 README.md](README.md)** - Deploy e configuração da API
-2. **[🔧 CONSUMO_API_BUSCA_LOCAL.md](CONSUMO_API_BUSCA_LOCAL.md)** - Endpoints e payloads
+2. **[🔧 CONSUMO_API_BUSCA_LOCAL.md](CONSUMO_API_BUSCA_LOCAL.md)** - Endpoints e analise_locals
 3. **[🔍 EXEMPLOS_CONSULTAS_RELATORIOS.md](EXEMPLOS_CONSULTAS_RELATORIOS.md)** - Analytics e monitoramento
 
 ### 📊 **Para Análise de Dados**
@@ -59,7 +59,7 @@
 
 ### 🔌 **Integração API**
 - **Endpoints disponíveis**: [CONSUMO_API_BUSCA_LOCAL.md](CONSUMO_API_BUSCA_LOCAL.md#-endpoints-da-api)
-- **Exemplos de payload**: [CONSUMO_API_BUSCA_LOCAL.md](CONSUMO_API_BUSCA_LOCAL.md#-exemplos-de-uso)
+- **Exemplos de analise_local**: [CONSUMO_API_BUSCA_LOCAL.md](CONSUMO_API_BUSCA_LOCAL.md#-exemplos-de-uso)
 - **Códigos de erro**: [CONSUMO_API_BUSCA_LOCAL.md](CONSUMO_API_BUSCA_LOCAL.md#-códigos-de-resposta)
 
 ### 📊 **Sistema de Relatórios**

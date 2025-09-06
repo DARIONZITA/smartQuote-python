@@ -85,7 +85,10 @@ def executar_estrutura_de_queries(
         limite = LIMITE_PADRAO_RESULTADOS
         
     modelos = weaviate_manager.get_models()
-    espacos = ["vetor_portugues"] + (["vetor_multilingue"] if modelos.get("vetor_multilingue") is not None and usar_multilingue else [])
+    espacos = ["vetor_portugues"] + (["vetor_multilingue"] if modelos.get("supports_multilingual") and usar_multilingue else [])
+    
+    if verbose:
+        logger.info(f"🔍 Espaços de busca: {espacos}")
 
     resultados_por_query: Dict[str, List[Dict[str, Any]]] = {}
 
@@ -237,10 +240,16 @@ def processar_interpretacao(
     # Sincronizar dados antes da busca
     try:
         if supabase_manager and supabase_manager.is_available():
-            novos = supabase_manager.get_novos_produtos()
-            if novos:
-                logger.info(f"🔄 Sincronizando {len(novos)} novos produtos do Supabase")
-                weaviate_manager.indexar_produtos(novos)
+            # Atualizar dados completos do Supabase (incluindo produtos removidos)
+            produtos_atualizados = supabase_manager.refresh()
+            if produtos_atualizados:
+                logger.info(f"🔄 Sincronizando {len(produtos_atualizados)} produtos do Supabase (incluindo remoções)")
+                # Usar sincronização completa que remove órfãos e indexa novos
+                metricas = weaviate_manager.sincronizar_com_supabase(produtos_atualizados)
+                if metricas.get("novos", 0) > 0 or metricas.get("removidos", 0) > 0:
+                    logger.info(f"📊 Sincronização: +{metricas.get('novos', 0)} novos, -{metricas.get('removidos', 0)} removidos")
+            else:
+                logger.info("📊 Nenhum produto encontrado no Supabase")
         else:
             logger.info("📊 Supabase não disponível; mantendo dados atuais do Weaviate")
     except Exception as e:
@@ -375,7 +384,7 @@ def processar_interpretacao(
                     # Verificar se é um produto rejeitado pela LLM
                     if produto.get("llm_rejected"):
                         # Produto rejeitado - criar item faltante com relatório LLM preservado
-                        payload = {
+                        analise_local = {
                             "query_id": qid,
                             "score": 0,  # Score 0 para produtos rejeitados
                             "alternativa": False,
@@ -388,7 +397,7 @@ def processar_interpretacao(
                         try:
                             cotacao_manager.insert_relatorio(
                                 cotacao_id=cotacao1_id,
-                                analise_local=[payload],
+                                analise_local=[analise_local],
                                 criado_por=interpretation.get("criado_por"),
                             )
                             logger.info(f"📝 Relatório LLM preservado para query {qid} (produtos rejeitados)")
@@ -404,12 +413,12 @@ def processar_interpretacao(
                             item_id = cotacao_manager.insert_missing_item(
                                 cotacao_id=cotacao1_id,
                                 nome=nome_item,
-                                descricao="Produtos encontrados mas rejeitados pela análise LLM",
+                                descricao="Produto não encontrado",
                                 tags=["rejeitado_llm", "faltante"],
                                 quantidade=quantidade,
                                 pedido=query_geradora,
-                                origem="local",
-                                payload=payload
+                                origem="externo",
+                                analise_local=analise_local
                             )
                             if item_id:
                                 logger.info(f"📝 Item faltante criado para produto rejeitado pela LLM: {nome_item}")
@@ -420,7 +429,7 @@ def processar_interpretacao(
                         # Produto aceito - processar normalmente
                         produto_id = produto.get("produto_id")
                         if produto_id and produto_id not in produtos_principais:
-                            payload = {
+                            analise_local = {
                                 "query_id": qid, 
                                 "score": produto.get("score"), 
                                 "alternativa": False
@@ -428,13 +437,13 @@ def processar_interpretacao(
                             
                             # Incluir relatório LLM se disponível
                             if produto.get('llm_relatorio'):
-                                payload["llm_relatorio"] = produto.get('llm_relatorio')
+                                analise_local["llm_relatorio"] = produto.get('llm_relatorio')
                             
                             # Registrar relatório
                             try:
                                 cotacao_manager.insert_relatorio(
                                     cotacao_id=cotacao1_id,
-                                    analise_local=[payload],
+                                    analise_local=[analise_local],
                                     criado_por=interpretation.get("criado_por"),
                                 )
                             except Exception as e:
@@ -448,7 +457,7 @@ def processar_interpretacao(
                                 resultado_produto=produto,
                                 origem=produto.get("origem", "local"),
                                 produto_id=produto_id,
-                                payload=payload,
+                                analise_local=analise_local,
                                 quantidade=meta_por_id.get(qid, {}).get("quantidade", 1),
                                 pedido=query_geradora,
                             )
@@ -457,7 +466,7 @@ def processar_interpretacao(
                                 produtos_principais.add(produto_id)
                 else:
                     # Nenhum produto encontrado
-                    payload = {
+                    analise_local = {
                         "query_id": qid,
                         "score": 0,
                         "alternativa": False,
@@ -468,7 +477,7 @@ def processar_interpretacao(
                     try:
                         cotacao_manager.insert_relatorio(
                             cotacao_id=cotacao1_id,
-                            analise_local=[payload],
+                            analise_local=[analise_local],
                             criado_por=interpretation.get("criado_por"),
                         )
                         logger.info(f"📝 Relatório registrado para query {qid} sem produtos encontrados")
@@ -490,10 +499,12 @@ def processar_interpretacao(
                         quantidade=quantidade,
                         pedido=pedido,
                         origem="web",
-                        payload={"query_id": tarefa.get("id")}
+                        analise_local={"query_id": tarefa.get("id")}
                     )
                     if item_id:
                         faltantes_inseridos += 1
+                        # Adicionar o item_id ao objeto tarefa para incluir na resposta
+                        tarefa["item_id"] = item_id
                 except Exception as e:
                     logger.warning(f"⚠️ Falha ao inserir item faltante: {e}")
 
@@ -543,7 +554,7 @@ def process_interpretation():
     try:
         data = request.get_json()
         if not data:
-            return jsonify({"error": "JSON payload required"}), 400
+            return jsonify({"error": "JSON analise_local required"}), 400
         
         # Extrair parâmetros
         interpretation = data.get('interpretation')
@@ -583,7 +594,7 @@ def hybrid_search():
     try:
         data = request.get_json()
         if not data:
-            return jsonify({"error": "JSON payload required"}), 400
+            return jsonify({"error": "JSON analise_local required"}), 400
         
         pesquisa = data.get('pesquisa')
         if not pesquisa:
@@ -596,6 +607,17 @@ def hybrid_search():
         # Validar limite
         if limite < 1 or limite > LIMITE_MAXIMO_RESULTADOS:
             limite = LIMITE_PADRAO_RESULTADOS
+        
+        # Sincronizar dados antes da busca
+        try:
+            if supabase_manager and supabase_manager.is_available():
+                produtos_atualizados = supabase_manager.refresh()
+                if produtos_atualizados:
+                    metricas = weaviate_manager.sincronizar_com_supabase(produtos_atualizados)
+                    if metricas.get("novos", 0) > 0 or metricas.get("removidos", 0) > 0:
+                        logger.info(f"📊 Sincronização híbrida: +{metricas.get('novos', 0)} novos, -{metricas.get('removidos', 0)} removidos")
+        except Exception as e:
+            logger.warning(f"⚠️ Falha ao sincronizar antes da busca híbrida: {e}")
         
         modelos = weaviate_manager.get_models()
         espacos = ["vetor_portugues"] + (["vetor_multilingue"] if modelos.get("supports_multilingual") and usar_multilingue else [])
@@ -650,29 +672,34 @@ def hybrid_search():
 
 @app.route('/sync-products', methods=['POST'])
 def sync_products():
-    """Sincroniza produtos do Supabase para o Weaviate"""
+    """Sincroniza produtos do Supabase para o Weaviate (incluindo remoções)"""
     try:
         if not supabase_manager or not supabase_manager.is_available():
             return jsonify({"error": "Supabase não disponível"}), 503
         
-        # Buscar novos produtos
-        novos = supabase_manager.get_novos_produtos()
+        # Buscar todos os produtos atuais do Supabase
+        produtos_atualizados = supabase_manager.refresh()
         
-        if novos:
-            # Indexar no Weaviate
-            weaviate_manager.indexar_produtos(novos)
-            logger.info(f"🔄 Sincronizados {len(novos)} produtos")
+        if produtos_atualizados is not None:
+            # Sincronização completa (adiciona novos e remove órfãos)
+            metricas = weaviate_manager.sincronizar_com_supabase(produtos_atualizados)
+            logger.info(f"🔄 Sincronização completa: {len(produtos_atualizados)} produtos no Supabase")
             
             return jsonify({
                 "status": "success",
-                "produtos_sincronizados": len(novos),
+                "produtos_total_supabase": len(produtos_atualizados),
+                "produtos_novos_indexados": metricas.get("novos", 0),
+                "produtos_removidos": metricas.get("removidos", 0),
+                "falhas": metricas.get("falhas", 0),
                 "timestamp": datetime.now().isoformat()
             }), 200
         else:
             return jsonify({
                 "status": "success",
-                "produtos_sincronizados": 0,
-                "message": "Nenhum produto novo encontrado",
+                "produtos_total_supabase": 0,
+                "produtos_novos_indexados": 0,
+                "produtos_removidos": 0,
+                "message": "Nenhum produto encontrado no Supabase",
                 "timestamp": datetime.now().isoformat()
             }), 200
             
@@ -682,6 +709,55 @@ def sync_products():
             "error": "Sync error",
             "details": str(e),
             "status": "error"
+        }), 500
+
+@app.route('/sync-status', methods=['GET'])
+def sync_status():
+    """Verifica o status da sincronização entre Supabase e Weaviate"""
+    try:
+        status = {
+            "timestamp": datetime.now().isoformat(),
+            "supabase_available": False,
+            "weaviate_available": False,
+            "produtos_supabase": 0,
+            "produtos_weaviate": 0,
+            "sincronizado": False
+        }
+        
+        # Verificar Supabase
+        if supabase_manager and supabase_manager.is_available():
+            status["supabase_available"] = True
+            try:
+                produtos = supabase_manager.get_produtos()
+                status["produtos_supabase"] = len(produtos) if produtos else 0
+            except Exception as e:
+                logger.warning(f"Erro ao contar produtos Supabase: {e}")
+        
+        # Verificar Weaviate
+        if weaviate_manager and weaviate_manager.client:
+            status["weaviate_available"] = True
+            try:
+                collection = weaviate_manager.client.collections.get("Produtos")
+                res = collection.aggregate.over_all(total_count=True)
+                status["produtos_weaviate"] = res.total_count if res else 0
+            except Exception as e:
+                logger.warning(f"Erro ao contar produtos Weaviate: {e}")
+        
+        # Verificar sincronização
+        status["sincronizado"] = (
+            status["supabase_available"] and 
+            status["weaviate_available"] and 
+            status["produtos_supabase"] == status["produtos_weaviate"]
+        )
+        
+        return jsonify(status), 200
+        
+    except Exception as e:
+        logger.error(f"Sync status error: {e}")
+        return jsonify({
+            "error": "Sync status error",
+            "details": str(e),
+            "timestamp": datetime.now().isoformat()
         }), 500
 
 def initialize_services():
