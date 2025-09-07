@@ -424,11 +424,7 @@ def processar_interpretacao(
                         "alternativa": False
                     }]
                 
-                relatorio_id = cotacao_manager.insert_relatorio(
-                    cotacao_id=cotacao1_id,
-                    analise_local=analises_relatório,
-                    criado_por=interpretation.get("criado_por"),
-                )
+          
                 print(f"📊 [COTACAO] Relatório de análise criado com {len(analises_relatório)} entradas")
 
             # Inserir itens faltantes como registros em cotacoes_itens com status=False e pedido
@@ -445,7 +441,7 @@ def processar_interpretacao(
                         tags=["faltante", tarefa.get("tipo") or "item"],
                         quantidade=quantidade,
                         pedido=pedido,
-                        origem="web",
+                        origem="externo",
                         analise_local={"query_id": tarefa.get("id")}
                     )
                     if item_id:
@@ -503,11 +499,7 @@ def processar_interpretacao(
                 print(f"🧠 [COTACAO-ALT] Adicionando relatório LLM para alternativa {qid}: {len(top_resultado.get('llm_relatorio', {}))} campos")
             else:
                 print(f"⚠️ [COTACAO-ALT] Nenhum relatório LLM encontrado para alternativa {qid}")
-            relatorio_id = cotacao_manager.insert_relatorio(
-                cotacao_id=cotacao1_id,
-                analise_local=[analise_local],
-                criado_por=interpretation.get("criado_por"),
-            )
+            
             item_id = cotacao_manager.insert_cotacao_item_from_result(
                 cotacao_id=cotacao_alt_id,
                 resultado_produto=top_resultado,

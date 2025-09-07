@@ -75,13 +75,29 @@ Este documento orienta a app consumidora sobre como usar a API Python de busca l
 ```json
 {
   "status": "success",
-  "processed_at": "2025-09-03T12:34:56.000Z",
+  "processed_at": "2025-09-06T12:34:56.000Z",
   "interpretation_id": 123,
   "dados_extraidos": { /* brief estruturado pelo LLM */ },
   "resultado_resumo": { "Q1": [ { "nome": "...", "produto_id": 1, "score": 0.87 } ] },
+  "metricas_busca": {
+    "fase_local": {
+      "queries_executadas": 3,
+      "produtos_encontrados": 2,
+      "queries_com_resultado": 2
+    },
+    "fase_cache": {
+      "queries_executadas": 1,
+      "produtos_encontrados": 1,
+      "queries_com_resultado": 1
+    },
+    "queries_ids_por_fase": {
+      "local": ["Q1", "Q2"],
+      "cache": ["Q3"]
+    }
+  },
   "faltantes": [
     {
-      "id": "Q2",
+      "id": "Q4",
       "tipo": "item",
       "nome": "Switch PoE",
       "categoria": "rede",
@@ -92,12 +108,16 @@ Este documento orienta a app consumidora sobre como usar a API Python de busca l
   ],
   "cotacoes": {
     "principal_id": 987,
-    "itens_adicionados": 2,
+    "itens_adicionados": 3,
     "faltantes_inseridos": 1
   }
 }
 ```
 - Notas:
+  - **BUSCA EM DUAS FASES**: O sistema agora executa busca sequencial:
+    1. **FASE LOCAL**: Busca produtos com `origem = "local"` primeiro
+    2. **FASE CACHE**: Para queries sem resultado, busca produtos com `origem = "externo"`
+  - O campo `metricas_busca` mostra estatísticas detalhadas de cada fase
   - O campo `faltantes` permanece na resposta apenas para referência/UX (tarefas de pesquisa externa). Ele NÃO é mais gravado dentro de `cotacoes`.
   - Cada item em `faltantes` agora inclui `item_id`: o ID do registro criado em `cotacoes_itens` para facilitar operações posteriores.
   - Quando `criar_cotacao` for `true`, a API cria:

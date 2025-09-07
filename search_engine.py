@@ -108,6 +108,7 @@ def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict
     "--- REGRAS DE DECISÃO HIERÁRQUICAS ---\n"
     "**PASSO 1: AVALIAÇÃO INDIVIDUAL E CLASSIFICAÇÃO (REGRA NÃO NEGOCIÁVEL)**\n"
     "   - Para CADA candidato, analise a QUERY, os FILTROS e o RIGOR.\n"
+    "   - rigor: inteiro (0–5) que define o nível de especificidade do pedido, de 0 (genérico) a 5 (modelo exato exigido)."
     "   - Classifique cada candidato numa de três categorias:\n"
     "     1. **'Elegível':** Cumpre a correspondência de tipo de produto E todas as especificações obrigatórias impostas pelo 'rigor'.\n"
     "     2. **'Parcialmente Relevante':** Cumpre a correspondência de tipo de produto, MAS falha num requisito de especificação imposto por um 'rigor' alto.\n"
@@ -198,10 +199,10 @@ def construir_filtro(filtros: dict = None):
     
     filtros_weaviate = []
     
-    # Filtro por categoria (aceita string ou lista de strings)
-    if "categoria" in filtros and filtros["categoria"]:
-        categorias = filtros["categoria"] if isinstance(filtros["categoria"], list) else [filtros["categoria"]]
-        filtros_weaviate.append(wvc.query.Filter.by_property("categoria").contains_any(categorias))
+    # Filtro por origem (para busca em duas fases)
+    if "origem" in filtros and filtros["origem"]:
+        origem = filtros["origem"]
+        filtros_weaviate.append(wvc.query.Filter.by_property("origem").equal(origem))
     
     # Combina filtros com AND lógico
     if not filtros_weaviate:
@@ -354,6 +355,9 @@ def buscar_hibrido_ponderado(client: weaviate.WeaviateClient, modelos: dict, que
     # Obter collection do Weaviate
     collection = client.collections.get("Produtos")
     
+    # Construir filtros do Weaviate
+    filtros_weaviate = construir_filtro(filtros)
+    
     # Expandir query para BM25
     expanded_query = query  # Usando query original já que expand_query_with_synonyms não existe
 
@@ -363,7 +367,7 @@ def buscar_hibrido_ponderado(client: weaviate.WeaviateClient, modelos: dict, que
             near_vector=vetor_query,
             target_vector=espaco,
             limit=limite * 3,
-            filters=None,
+            filters=filtros_weaviate,
             return_metadata=wvc.query.MetadataQuery(distance=True)
         )
     except Exception as e:
@@ -375,7 +379,7 @@ def buscar_hibrido_ponderado(client: weaviate.WeaviateClient, modelos: dict, que
             query=expanded_query,
             query_properties=["nome", "tags", "categoria", "descricao"],
             limit=limite * 3,
-            filters=None,
+            filters=filtros_weaviate,
             return_metadata=wvc.query.MetadataQuery(score=True)
         )
     except Exception as e:

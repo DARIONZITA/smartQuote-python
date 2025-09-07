@@ -6,6 +6,7 @@ import warnings
 import sys
 import os
 import numpy as np
+import time
 
 # Importar configurações usando try/except para robustez
 try:
@@ -25,17 +26,23 @@ warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf"
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class HuggingFaceEmbeddingClient:
-    """Cliente para obter embeddings via API do Hugging Face"""
-    
-    def __init__(self):
+    """Cliente para obter embeddings via API do Hugging Face com retries"""
+
+    def __init__(self, space_name: str | None = None, max_retries: int | None = None, backoff_seconds: float | None = None):
         self.client = None
-        self.space_name = "dnzita/smartquote"
+        # Permite configurar o Space via variável de ambiente HUGGINGFACE_SPACE
+        self.space_name = space_name or os.environ.get("HUGGINGFACE_SPACE", "dnzita/smartquote")
+        # Configura tentativas e backoff via env se disponível
+        self.max_retries = int(os.environ.get("EMBEDDING_MAX_RETRIES", max_retries or 3))
+        self.backoff_seconds = float(os.environ.get("EMBEDDING_RETRY_BACKOFF", backoff_seconds or 2.0))
         
     def connect(self):
         """Conecta ao cliente da API do Hugging Face"""
         try:
-            print("Conectando à API do Hugging Face...")
-            self.client = Client(self.space_name)
+            print(f"Conectando à API do Hugging Face... (space: {self.space_name})")
+            hf_token = os.environ.get("HUGGINGFACE_TOKEN")
+            # Se houver token, utiliza para reduzir problemas de rate/latência
+            self.client = Client(self.space_name, hf_token=hf_token) if hf_token else Client(self.space_name)
             print("✅ Conectado à API do Hugging Face")
         except Exception as e:
             print(f"❌ Erro ao conectar à API do Hugging Face: {e}")
@@ -55,26 +62,53 @@ class HuggingFaceEmbeddingClient:
         if not self.client:
             raise Exception("Cliente não conectado. Chame connect() primeiro.")
             
-        try:
-            result = self.client.predict(
-                texts=text,
-                model_choice=model_choice,
-                api_name="/predict"
-            )
-            
-            # Gradio retorna [[...]] para um texto, precisa "achatar"
-            if isinstance(result, list) and len(result) > 0:
-                # Se veio [[...]], pega só o primeiro (para um texto)
-                if isinstance(result[0], list):
-                    return result[0]  # Retorna apenas o embedding do primeiro texto
+        last_exc: Exception | None = None
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                result = self.client.predict(
+                    texts=text,
+                    model_choice=model_choice,
+                    api_name="/predict"
+                )
+
+                # Gradio retorna [[...]] para um texto, precisa "achatar"
+                if isinstance(result, list) and len(result) > 0:
+                    # Se veio [[...]], pega só o primeiro (para um texto)
+                    if isinstance(result[0], list):
+                        return result[0]  # Retorna apenas o embedding do primeiro texto
+                    else:
+                        return result  # Já está no formato correto
                 else:
-                    return result  # Já está no formato correto
-            else:
-                raise Exception(f"Formato de resposta inesperado: {type(result)}")
-                
-        except Exception as e:
-            print(f"❌ Erro ao gerar embedding: {e}")
-            raise
+                    raise Exception(f"Formato de resposta inesperado: {type(result)}")
+
+            except Exception as e:
+                last_exc = e
+                msg = str(e).lower()
+                transient = any(t in msg for t in [
+                    "handshake",
+                    "timeout",
+                    "temporarily unavailable",
+                    "temporary failure",
+                    "max retries",
+                    "connection reset",
+                    "connection aborted",
+                ])
+                print(f"⚠️ Falha ao gerar embedding (tentativa {attempt}/{self.max_retries}): {e}")
+                if attempt < self.max_retries and transient:
+                    # Recria o cliente e espera com backoff exponencial
+                    try:
+                        self.connect()
+                    except Exception:
+                        # já houve log no connect()
+                        pass
+                    sleep_s = self.backoff_seconds * (2 ** (attempt - 1))
+                    time.sleep(min(sleep_s, 15))
+                    continue
+                # Sem retries restantes ou erro não transitório
+                break
+
+        print(f"❌ Erro ao gerar embedding: {last_exc}")
+        raise last_exc if last_exc else Exception("Falha desconhecida ao gerar embedding")
 
 class WeaviateManager:
     def __init__(self):
@@ -133,6 +167,7 @@ class WeaviateManager:
                 Property(name="categoria", data_type=DataType.TEXT),
                 Property(name="tags", data_type=DataType.TEXT_ARRAY),
                 Property(name="estoque", data_type=DataType.INT),
+                Property(name="origem", data_type=DataType.TEXT),  # Adicionado para busca em duas fases
             ],
             vectorizer_config=[
                 Configure.NamedVectors.none(name="vetor_portugues"),
@@ -192,15 +227,14 @@ class WeaviateManager:
                 "preco": preco,
                 "categoria": categoria,
                 "tags": tags_array,
-                "estoque": estoque
+                "estoque": estoque,
+                "origem": dados_produto.get("origem", "local")  # Adicionado para busca em duas fases
             }
+            # Usa o dicionário 'vectors' preparado acima para evitar enviar None
             collection.data.insert(
                 uuid=uuid_produto,
                 properties=dados_weaviate,
-                vector={   # <- corrigido para singular
-                    "vetor_portugues": emb_pt,
-                    "vetor_multilingue": emb_multi
-                }
+                vector=vectors
             )
             print(f"✔ Produto novo indexado: {nome} (id={produto_id})")
             self._known_ids.add(produto_id)
@@ -233,7 +267,8 @@ class WeaviateManager:
                 "preco": preco,
                 "categoria": categoria,
                 "tags": tags_array,
-                "estoque": estoque
+                "estoque": estoque,
+                "origem": dados_produto.get("origem", "local")  # Adicionado para busca em duas fases
             }
             collection.data.update(uuid=uuid_produto, properties=dados_weaviate, vector=vectors)
             print(f"✏️ Produto atualizado (texto mudou): {nome} (id={produto_id})")

@@ -100,13 +100,15 @@ def executar_estrutura_de_queries(
         todos: List[Dict[str, Any]] = []
         # Buscar em todos os espaços e juntar resultados
         for espaco in espacos:
+            filtros_query = q.get("filtros") or {}
+            
             r = buscar_hibrido_ponderado(
                 weaviate_manager.client,
                 modelos,
                 q["query"],
                 espaco,
                 limite=limite,
-                filtros=q.get("filtros") or None,
+                filtros=filtros_query,
             )
             todos.extend(r)
         
@@ -220,6 +222,189 @@ def _resumo_resultados(resultados: Dict[str, List[Dict[str, Any]]], limite: int)
         resumo[qid] = compact
     return resumo
 
+def executar_busca_duas_fases(
+    weaviate_manager: WeaviateManager,
+    estrutura: List[Dict[str, Any]],
+    limite_resultados: int = LIMITE_PADRAO_RESULTADOS,
+    usar_multilingue: bool = True,
+    verbose: bool = False
+) -> Tuple[Dict[str, List[Dict[str, Any]]], List[str], Dict[str, Any]]:
+    """
+    Executa busca em duas fases:
+    1. Primeira fase: produtos com origem='local'
+    2. Segunda fase (cache): produtos com origem='externo' para queries sem resultado na primeira fase
+    
+    Returns:
+        Tuple[resultados_finais, faltantes_finais, metricas_fases]
+    """
+    metricas = {
+        "fase_local": {"queries_executadas": 0, "produtos_encontrados": 0, "queries_com_resultado": 0},
+        "fase_cache": {"queries_executadas": 0, "produtos_encontrados": 0, "queries_com_resultado": 0},
+        "queries_ids_por_fase": {"local": [], "cache": []},
+        # Novo: guardar as análises LLM por fase para cada query
+        "analises_por_fase": {"local": {}, "cache": {}}
+    }
+    
+    if verbose:
+        logger.info("🚀 Iniciando busca em duas fases: LOCAL → CACHE")
+    
+    # FASE 1: Busca com produtos locais apenas
+    if verbose:
+        logger.info("📍 FASE 1: Buscando produtos com origem='local'")
+    
+    # Criar estrutura com filtros de origem local
+    estrutura_local = []
+    for q in estrutura:
+        q_local = q.copy()
+        filtros_local = (q_local.get("filtros") or {}).copy()
+        filtros_local["origem"] = "local"
+        q_local["filtros"] = filtros_local
+        estrutura_local.append(q_local)
+    
+    resultados_local, faltantes_local = executar_estrutura_de_queries(
+        weaviate_manager,
+        estrutura_local,
+        limite=limite_resultados,
+        usar_multilingue=usar_multilingue,
+        verbose=verbose
+    )
+    
+    # Atualizar métricas da fase local e marcar origem
+    metricas["fase_local"]["queries_executadas"] = len(estrutura)
+    for qid, lista in resultados_local.items():
+        metricas["queries_ids_por_fase"]["local"].append(qid)
+        if lista and not (len(lista) == 1 and lista[0].get("llm_rejected")):
+            metricas["fase_local"]["queries_com_resultado"] += 1
+            metricas["fase_local"]["produtos_encontrados"] += len(lista)
+            # Marcar produtos da fase local
+            for produto in lista:
+                produto["fase_origem"] = "local"
+        # Capturar análise LLM da fase local (SEMPRE preservar relatórios)
+        if lista:
+            topo = lista[0]
+            rel = topo.get("llm_relatorio") or {}
+            match_ok = not topo.get("llm_rejected") and topo.get("produto_id") is not None
+            score_local = topo.get("score") if match_ok else 0
+            metricas["analises_por_fase"]["local"][qid] = {
+                "relatorio": rel,
+                "score": score_local,
+                "match": bool(match_ok),
+                "status": "rejeitado_por_llm" if topo.get("llm_rejected") else "aceito",
+                "observacao": topo.get("observacao") if topo.get("llm_rejected") else None
+            }
+        else:
+            # Mesmo sem resultados, preservar estrutura para capturar relatórios futuros
+            metricas["analises_por_fase"]["local"][qid] = {
+                "relatorio": {},
+                "score": 0,
+                "match": False,
+                "status": "sem_produtos_encontrados",
+                "observacao": "Nenhum produto encontrado na fase local"
+            }
+    
+    # Identificar queries que precisam de busca cache
+    queries_para_cache = []
+    queries_ids_cache = []
+    
+    for q in estrutura:
+        qid = q["id"]
+        lista_q = resultados_local.get(qid, [])
+        
+        # Precisa de cache se: vazio OU se contém apenas produtos rejeitados pela LLM
+        precisa_cache = (
+            not lista_q or 
+            (len(lista_q) == 1 and lista_q[0].get("llm_rejected"))
+        )
+        
+        if precisa_cache:
+            queries_para_cache.append(q)
+            queries_ids_cache.append(qid)
+    
+    resultados_finais = resultados_local.copy()
+    faltantes_finais = faltantes_local.copy()
+    
+    # FASE 2: Busca cache (produtos externos) apenas para queries sem resultado
+    if queries_para_cache:
+        if verbose:
+            logger.info(f"🔄 FASE 2 (CACHE): Buscando produtos com origem='externo' para {len(queries_para_cache)} queries")
+            logger.info(f"Queries para cache: {queries_ids_cache}")
+        
+        # Criar estrutura com filtros de origem externa
+        estrutura_cache = []
+        for q in queries_para_cache:
+            q_cache = q.copy()
+            filtros_cache = (q_cache.get("filtros") or {}).copy()
+            filtros_cache["origem"] = "externo"
+            q_cache["filtros"] = filtros_cache
+            estrutura_cache.append(q_cache)
+        
+        resultados_cache, faltantes_cache = executar_estrutura_de_queries(
+            weaviate_manager,
+            estrutura_cache,
+            limite=limite_resultados,
+            usar_multilingue=usar_multilingue,
+            verbose=verbose
+        )
+        
+        # Atualizar métricas da fase cache
+        metricas["fase_cache"]["queries_executadas"] = len(queries_para_cache)
+        for qid, lista in resultados_cache.items():
+            metricas["queries_ids_por_fase"]["cache"].append(qid)
+            if lista and not (len(lista) == 1 and lista[0].get("llm_rejected")):
+                metricas["fase_cache"]["queries_com_resultado"] += 1
+                metricas["fase_cache"]["produtos_encontrados"] += len(lista)
+            # Capturar análise LLM da fase cache (SEMPRE preservar relatórios)
+            if lista:
+                topo = lista[0]
+                rel = topo.get("llm_relatorio") or {}
+                match_ok = not topo.get("llm_rejected") and topo.get("produto_id") is not None
+                score_cache = topo.get("score") if match_ok else 0
+                metricas["analises_por_fase"]["cache"][qid] = {
+                    "relatorio": rel,
+                    "score": score_cache,
+                    "match": bool(match_ok),
+                    "status": "rejeitado_por_llm" if topo.get("llm_rejected") else "aceito",
+                    "observacao": topo.get("observacao") if topo.get("llm_rejected") else None
+                }
+            else:
+                # Mesmo sem resultados na cache, preservar estrutura
+                metricas["analises_por_fase"]["cache"][qid] = {
+                    "relatorio": {},
+                    "score": 0,
+                    "match": False,
+                    "status": "sem_produtos_encontrados", 
+                    "observacao": "Nenhum produto encontrado na fase cache"
+                }
+        
+        # Mesclar resultados: substituir resultados vazios/rejeitados pelos da cache
+        for qid in queries_ids_cache:
+            if qid in resultados_cache:
+                lista_cache = resultados_cache[qid]
+                if lista_cache and not (len(lista_cache) == 1 and lista_cache[0].get("llm_rejected")):
+                    # Cache encontrou resultado válido - marcar como originário da cache
+                    for produto in lista_cache:
+                        produto["fase_origem"] = "cache"  # Marcar produtos da fase cache
+                    resultados_finais[qid] = lista_cache
+                    # Remover da lista de faltantes se estava lá
+                    if qid in faltantes_finais:
+                        faltantes_finais.remove(qid)
+                    if verbose:
+                        logger.info(f"✅ Cache resolveu query {qid}")
+        
+        # Atualizar faltantes finais
+        faltantes_finais = [qid for qid in faltantes_cache if qid in queries_ids_cache]
+    else:
+        if verbose:
+            logger.info("✅ FASE 2 (CACHE): Não necessária - todas as queries foram resolvidas na fase local")
+    
+    if verbose:
+        total_local = metricas["fase_local"]["queries_com_resultado"]
+        total_cache = metricas["fase_cache"]["queries_com_resultado"] 
+        total_faltantes = len(faltantes_finais)
+        logger.info(f"📊 RESUMO: {total_local} local + {total_cache} cache + {total_faltantes} faltantes = {len(estrutura)} queries")
+    
+    return resultados_finais, faltantes_finais, metricas
+
 def processar_interpretacao(
     interpretation: Dict[str, Any],
     limite_resultados: int = LIMITE_PADRAO_RESULTADOS,
@@ -261,12 +446,13 @@ def processar_interpretacao(
     estrutura = gerar_estrutura_de_queries(brief)
     logger.info(f"🧩 {len(estrutura)} queries geradas a partir do brief")
 
-    resultados, faltantes = executar_estrutura_de_queries(
+    # Executar busca em duas fases: LOCAL → CACHE
+    resultados, faltantes, metricas_fases = executar_busca_duas_fases(
         weaviate_manager,
         estrutura,
-        limite=limite_resultados,
+        limite_resultados=limite_resultados,
         usar_multilingue=usar_multilingue,
-        verbose=True,
+        verbose=True
     )
 
     # Mapear metadados das queries para facilitar detalhes dos faltantes
@@ -331,6 +517,7 @@ def processar_interpretacao(
         "dados_bruto": interpretation.get("dados_bruto"),
         "faltantes": tarefas_web,
         "resultado_resumo": _resumo_resultados(resultados, limite_resultados),
+        "metricas_busca": metricas_fases,
     }
 
     # Criação opcional de cotações
@@ -393,17 +580,7 @@ def processar_interpretacao(
                             "llm_relatorio": produto.get("llm_relatorio", {})
                         }
                         
-                        # Inserir relatório preservando a análise LLM
-                        try:
-                            cotacao_manager.insert_relatorio(
-                                cotacao_id=cotacao1_id,
-                                analise_local=[analise_local],
-                                criado_por=interpretation.get("criado_por"),
-                            )
-                            logger.info(f"📝 Relatório LLM preservado para query {qid} (produtos rejeitados)")
-                        except Exception as e:
-                            logger.warning(f"⚠️ Falha ao registrar relatório da cotação {cotacao1_id}: {e}")
-                        
+                  
                         # Criar item faltante para produto rejeitado pela LLM
                         try:
                             query_geradora = meta_por_id.get(qid, {}).get("query")
@@ -429,27 +606,42 @@ def processar_interpretacao(
                         # Produto aceito - processar normalmente
                         produto_id = produto.get("produto_id")
                         if produto_id and produto_id not in produtos_principais:
-                            analise_local = {
-                                "query_id": qid, 
-                                "score": produto.get("score"), 
-                                "alternativa": False
-                            }
+                            # Verificar se o produto vem da fase cache ou local
+                            fase_origem = produto.get("fase_origem", "local")
                             
-                            # Incluir relatório LLM se disponível
-                            if produto.get('llm_relatorio'):
-                                analise_local["llm_relatorio"] = produto.get('llm_relatorio')
+                            if fase_origem == "cache":
+                                # Produto da fase cache - criar ambas análises com dados específicos por fase
+                                dados_cache = metricas_fases.get("analises_por_fase", {}).get("cache", {}).get(qid, {})
+                                dados_local_ref = metricas_fases.get("analises_por_fase", {}).get("local", {}).get(qid, {})
+                                analise_local = {
+                                    "query_id": qid,
+                                    "score": dados_local_ref.get("score", 0),
+                                    "alternativa": False,
+                                    "fase_origem": "cache",
+                                }
+                                if dados_local_ref.get("relatorio"):
+                                    analise_local["llm_relatorio"] = dados_local_ref.get("relatorio")
+                                analise_cache = {
+                                    "query_id": qid,
+                                    "score": dados_cache.get("score", produto.get("score")),
+                                    "alternativa": False,
+                                }
+                                if dados_cache.get("relatorio"):
+                                    analise_cache["llm_relatorio"] = dados_cache.get("relatorio")
+                            else:
+                                # Produto da fase local - usar analise_local com dados da fase local
+                                dados_local = metricas_fases.get("analises_por_fase", {}).get("local", {}).get(qid, {})
+                                analise_local = {
+                                    "query_id": qid,
+                                    "score": dados_local.get("score", produto.get("score")),
+                                    "alternativa": False,
+                                    "fase_origem": "local",
+                                }
+                                if dados_local.get("relatorio"):
+                                    analise_local["llm_relatorio"] = dados_local.get("relatorio")
+                                analise_cache = None
                             
-                            # Registrar relatório
-                            try:
-                                cotacao_manager.insert_relatorio(
-                                    cotacao_id=cotacao1_id,
-                                    analise_local=[analise_local],
-                                    criado_por=interpretation.get("criado_por"),
-                                )
-                            except Exception as e:
-                                logger.warning(f"⚠️ Falha ao registrar relatório da cotação {cotacao1_id}: {e}")
-                            
-                            # Inserir item na cotação
+                                  # Inserir item na cotação
                             # Passar a query que gerou o item no campo 'pedido'
                             query_geradora = meta_por_id.get(qid, {}).get("query")
                             item_id = cotacao_manager.insert_cotacao_item_from_result(
@@ -458,6 +650,7 @@ def processar_interpretacao(
                                 origem=produto.get("origem", "local"),
                                 produto_id=produto_id,
                                 analise_local=analise_local,
+                                analise_cache=analise_cache,
                                 quantidade=meta_por_id.get(qid, {}).get("quantidade", 1),
                                 pedido=query_geradora,
                             )
@@ -465,25 +658,56 @@ def processar_interpretacao(
                                 itens_adicionados += 1
                                 produtos_principais.add(produto_id)
                 else:
-                    # Nenhum produto encontrado
+                    # Nenhum produto encontrado em ambas as fases - preservar relatórios LLM de ambas
+                    dados_local = metricas_fases.get("analises_por_fase", {}).get("local", {}).get(qid, {})
+                    dados_cache = metricas_fases.get("analises_por_fase", {}).get("cache", {}).get(qid, {})
+                    
                     analise_local = {
                         "query_id": qid,
-                        "score": 0,
+                        "score": dados_local.get("score", 0),
                         "alternativa": False,
-                        "status": "sem_produtos_encontrados",
-                        "observacao": "Nenhum produto encontrado na base de dados"
+                        "status": dados_local.get("status", "sem_produtos_encontrados"),
+                        "observacao": dados_local.get("observacao", "Nenhum produto encontrado na base de dados"),
+                        "fase_origem": "local"
                     }
+                    if dados_local.get("relatorio"):
+                        analise_local["llm_relatorio"] = dados_local.get("relatorio")
                     
+                    analise_cache = None
+                    if dados_cache:  # Se houve tentativa de busca cache
+                        analise_cache = {
+                            "query_id": qid,
+                            "score": dados_cache.get("score", 0),
+                            "alternativa": False,
+                            "status": dados_cache.get("status", "sem_produtos_encontrados"),
+                            "observacao": dados_cache.get("observacao", "Nenhum produto encontrado na cache externa")
+                        }
+                        if dados_cache.get("relatorio"):
+                            analise_cache["llm_relatorio"] = dados_cache.get("relatorio")
+                    
+                    # Criar item faltante preservando TODOS os relatórios LLM
                     try:
-                        cotacao_manager.insert_relatorio(
+                        query_geradora = meta_por_id.get(qid, {}).get("query")
+                        nome_item = meta_por_id.get(qid, {}).get("fonte", {}).get("nome") or "Item não encontrado"
+                        quantidade = meta_por_id.get(qid, {}).get("quantidade", 1)
+                        
+                        item_id = cotacao_manager.insert_missing_item(
                             cotacao_id=cotacao1_id,
-                            analise_local=[analise_local],
-                            criado_por=interpretation.get("criado_por"),
+                            nome=nome_item,
+                            descricao="Produto não encontrado em nenhuma fase",
+                            tags=["faltante", "ambas_fases_falharam"],
+                            quantidade=quantidade,
+                            pedido=query_geradora,
+                            origem="externo",
+                            analise_local=analise_local,
+                            analise_cache=analise_cache  # Preservar análise cache também
                         )
-                        logger.info(f"📝 Relatório registrado para query {qid} sem produtos encontrados")
+                        if item_id:
+                            logger.info(f"📝 Item faltante criado preservando relatórios de ambas as fases: {nome_item}")
                     except Exception as e:
-                        logger.warning(f"⚠️ Falha ao registrar relatório para query {qid} sem produtos: {e}")
-
+                        logger.warning(f"⚠️ Falha ao criar item faltante com relatórios preservados: {e}")
+                    
+         
             # Inserir itens faltantes como registros em cotacoes_itens com status=False e pedido
             faltantes_inseridos = 0
             for tarefa in tarefas_web:
@@ -498,7 +722,7 @@ def processar_interpretacao(
                         tags=["faltante", tarefa.get("tipo") or "item"],
                         quantidade=quantidade,
                         pedido=pedido,
-                        origem="web",
+                        origem="externo",
                         analise_local={"query_id": tarefa.get("id")}
                     )
                     if item_id:

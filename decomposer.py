@@ -70,13 +70,13 @@ class SolutionDecomposer:
         - **quantidade**: número inteiro indicando quantos itens são necessários
         - **orcamento_estimado**: valor inteiro (Kwanzas) indicando o orçamento unitario máximo para este item (se não especificado: 0)
         - **preferencias_usuario**: lista de preferências expressas pelo cliente de forma implícita ou explícita sobre o item (ex: ["preferência por soluções open-source", "manutenção local"])
-        - **rigor**: inteiro (0–5) indicando quão exatamente o usuário quer o item:
-            - 0 = genérico ("um computador")
-            - 1 = pouco específico, com uma característica mínima
-            - 2 = algumas características, ainda aberto a variações
-            - 3 = moderadamente específico, margem de flexibilidade
-            - 4 = quase fechado, pequenas variações possíveis
-            - 5 = rígido, modelo exato exigido
+       - **rigor**: inteiro (0–5) indicando quão exatamente o usuário quer o item. Use as REGRAS DE RIGOR abaixo:
+        - 0 = genérico (ex.: computador, impressora)
+        - 1 = pouco específico, com 1 característica mínima
+        - 2 = algumas características (2 specs), ainda aberto a variações
+        - 3 = descrição de categoria/uso ou ≥3 especificações
+        - 4 = marca explícita sem modelo, pequenas variações possíveis
+        - 5 = sempre que o nome contiver modelo exato (marca + número/letra ou versão); marque 5 mesmo sem a palavra "exato"
         4. **prazo_implementacao_dias**: número inteiro com a estimativa de dias (se não especificado: 0)
        
         ---
