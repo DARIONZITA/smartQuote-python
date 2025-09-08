@@ -295,7 +295,7 @@ def executar_busca_duas_fases(
         else:
             # Mesmo sem resultados, preservar estrutura para capturar relatórios futuros
             metricas["analises_por_fase"]["local"][qid] = {
-                "relatorio": {},
+                "relatorio": lista[0].get("llm_relatorio") or {},
                 "score": 0,
                 "match": False,
                 "status": "sem_produtos_encontrados",
@@ -368,8 +368,9 @@ def executar_busca_duas_fases(
                 }
             else:
                 # Mesmo sem resultados na cache, preservar estrutura
+                topo = lista[0]
                 metricas["analises_por_fase"]["cache"][qid] = {
-                    "relatorio": {},
+                    "relatorio": topo.get("llm_relatorio"),
                     "score": 0,
                     "match": False,
                     "status": "sem_produtos_encontrados", 
@@ -570,17 +571,50 @@ def processar_interpretacao(
                     
                     # Verificar se é um produto rejeitado pela LLM
                     if produto.get("llm_rejected"):
-                        # Produto rejeitado - criar item faltante com relatório LLM preservado
+                        # Produto rejeitado - preservar análises das fases adequadas
+                        fase_origem = produto.get("fase_origem", "local")
+                        dados_cache = metricas_fases.get("analises_por_fase", {}).get("cache", {}).get(qid, {})
+                        dados_local_ref = metricas_fases.get("analises_por_fase", {}).get("local", {}).get(qid, {})
+                        
+                        # Sempre incluir análise local quando produtos são rejeitados
                         analise_local = {
                             "query_id": qid,
-                            "score": 0,  # Score 0 para produtos rejeitados
+                            "score": dados_local_ref.get("score", 0),
                             "alternativa": False,
-                            "status": "rejeitado_por_llm",
-                            "observacao": produto.get("observacao", "Produtos encontrados mas rejeitados pela análise LLM"),
-                            "llm_relatorio": produto.get("llm_relatorio", {})
+                            "status": dados_local_ref.get("status", "rejeitado_por_llm"),
+                            "observacao": dados_local_ref.get("observacao", "Produtos encontrados mas rejeitados pela análise LLM"),
+                            "fase_origem": "local"
                         }
+                        if dados_local_ref.get("relatorio"):
+                            analise_local["llm_relatorio"] = dados_local_ref.get("relatorio")
                         
-                  
+                        # Sempre incluir análise cache se a fase cache foi executada
+                        analise_cache = None
+                        if dados_cache:
+                            # Produto rejeitado na cache - incluir análise da cache
+                            analise_cache = {
+                                "query_id": qid,
+                                "score": dados_cache.get("score", 0),
+                                "alternativa": False,
+                                "status": "rejeitado_por_llm",
+                                "observacao": dados_cache.get("observacao", "Produtos encontrados mas rejeitados pela análise LLM na cache"),
+                                "fase_origem": "cache"
+                            }
+                            if dados_cache.get("relatorio"):
+                                analise_cache["llm_relatorio"] = dados_cache.get("relatorio")
+                        else:
+                            # Verificar se a fase cache foi executada mesmo sem dados
+                            fases_executadas = metricas_fases.get("fases_executadas", [])
+                            if "cache" in fases_executadas:
+                                analise_cache = {
+                                    "query_id": qid,
+                                    "score": 0,
+                                    "alternativa": False,
+                                    "status": "fase_executada_sem_resultado",
+                                    "observacao": "Fase cache executada mas sem produtos encontrados ou dados de análise",
+                                    "fase_origem": "cache"
+                                }
+                        
                         # Criar item faltante para produto rejeitado pela LLM
                         try:
                             query_geradora = meta_por_id.get(qid, {}).get("query")
@@ -595,7 +629,8 @@ def processar_interpretacao(
                                 quantidade=quantidade,
                                 pedido=query_geradora,
                                 origem="externo",
-                                analise_local=analise_local
+                                analise_local=analise_local,
+                                analise_cache=analise_cache
                             )
                             if item_id:
                                 logger.info(f"📝 Item faltante criado para produto rejeitado pela LLM: {nome_item}")
@@ -673,6 +708,7 @@ def processar_interpretacao(
                     if dados_local.get("relatorio"):
                         analise_local["llm_relatorio"] = dados_local.get("relatorio")
                     
+                    # Sempre criar analise_cache se houve tentativa de busca cache
                     analise_cache = None
                     if dados_cache:  # Se houve tentativa de busca cache
                         analise_cache = {
@@ -680,10 +716,23 @@ def processar_interpretacao(
                             "score": dados_cache.get("score", 0),
                             "alternativa": False,
                             "status": dados_cache.get("status", "sem_produtos_encontrados"),
-                            "observacao": dados_cache.get("observacao", "Nenhum produto encontrado na cache externa")
+                            "observacao": dados_cache.get("observacao", "Nenhum produto encontrado na cache externa"),
+                            "fase_origem": "cache"
                         }
                         if dados_cache.get("relatorio"):
                             analise_cache["llm_relatorio"] = dados_cache.get("relatorio")
+                    else:
+                        # Mesmo sem dados cache, verificar se houve busca na fase cache
+                        fases_executadas = metricas_fases.get("fases_executadas", [])
+                        if "cache" in fases_executadas:
+                            analise_cache = {
+                                "query_id": qid,
+                                "score": 0,
+                                "alternativa": False,
+                                "status": "fase_executada_sem_resultado",
+                                "observacao": "Fase cache executada mas sem dados de análise",
+                                "fase_origem": "cache"
+                            }
                     
                     # Criar item faltante preservando TODOS os relatórios LLM
                     try:
@@ -707,31 +756,6 @@ def processar_interpretacao(
                     except Exception as e:
                         logger.warning(f"⚠️ Falha ao criar item faltante com relatórios preservados: {e}")
                     
-         
-            # Inserir itens faltantes como registros em cotacoes_itens com status=False e pedido
-            faltantes_inseridos = 0
-            for tarefa in tarefas_web:
-                try:
-                    pedido = tarefa.get("query_sugerida") or None
-                    nome_faltante = tarefa.get("nome") or tarefa.get("categoria") or "Item não encontrado"
-                    quantidade = tarefa.get("quantidade") or 1
-                    item_id = cotacao_manager.insert_missing_item(
-                        cotacao_id=cotacao1_id,
-                        nome=nome_faltante,
-                        descricao=None,
-                        tags=["faltante", tarefa.get("tipo") or "item"],
-                        quantidade=quantidade,
-                        pedido=pedido,
-                        origem="externo",
-                        analise_local={"query_id": tarefa.get("id")}
-                    )
-                    if item_id:
-                        faltantes_inseridos += 1
-                        # Adicionar o item_id ao objeto tarefa para incluir na resposta
-                        tarefa["item_id"] = item_id
-                except Exception as e:
-                    logger.warning(f"⚠️ Falha ao inserir item faltante: {e}")
-
             # Atualizar status da cotação conforme itens (incompleta se houver algum status=False)
             try:
                 cotacao_manager.update_status_from_items(cotacao1_id)

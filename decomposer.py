@@ -64,7 +64,7 @@ class SolutionDecomposer:
             - Automação de Postos de Combustível, Quiosques e Autoatendimento
             - Internet das Coisas (IoT), Realidade Virtual e Aumentada (VR/AR), Soluções para Saúde (Health Tech)
         - **especificacoes_minimas** : objeto com detalhes técnicos caso haja, dependendo da necessidade do cliente, ordenados pelo nível de exigência (ex: {"RAM": "8GB DDR4"} ou mais geral {RAM >= 8GB})
-        - **justificativa** : texto explicando a importância desse requisito
+        - **justificativa** : texto explicando a utilidade desse item para a solução
         - **tags**: lista de tags relacionadas a este item (ou deixe vazia)
         - **alternativas**: lista de alternativas equivalentes (ou vazia)
         - **quantidade**: número inteiro indicando quantos itens são necessários
