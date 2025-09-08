@@ -295,7 +295,7 @@ def executar_busca_duas_fases(
         else:
             # Mesmo sem resultados, preservar estrutura para capturar relatórios futuros
             metricas["analises_por_fase"]["local"][qid] = {
-                "relatorio": lista[0].get("llm_relatorio") or {},
+                "relatorio": {},
                 "score": 0,
                 "match": False,
                 "status": "sem_produtos_encontrados",
@@ -368,9 +368,8 @@ def executar_busca_duas_fases(
                 }
             else:
                 # Mesmo sem resultados na cache, preservar estrutura
-                topo = lista[0]
                 metricas["analises_por_fase"]["cache"][qid] = {
-                    "relatorio": topo.get("llm_relatorio"),
+                    "relatorio": {},
                     "score": 0,
                     "match": False,
                     "status": "sem_produtos_encontrados", 
