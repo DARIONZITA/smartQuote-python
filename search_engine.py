@@ -6,6 +6,7 @@ import re
 import sys
 import os
 from groq import Groq
+import time
 
 # Adicionar o diretório pai ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,11 +37,6 @@ def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict
     """
     if not candidatos:
         return {"index": -1, "relatorio": {"erro": "Nenhum candidato fornecido"}}
-
-    # A API Key deve ser gerida de forma segura
-    api_key = os.environ.get("GROQ_API_KEY")
-    if not api_key:
-        return {"index": -1, "relatorio": {"erro": "API key da Groq não disponível"}}
 
     # Compactar candidatos para o prompt, garantindo clareza para a LLM
     compacts: List[Dict[str, Any]] = []
@@ -141,37 +137,62 @@ def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict
         "Analise e retorne o JSON completo com o ranking e as justificativas."
     )
 
+    # Tentar com múltiplas chaves e um retry após 4s
+    key_names = ["GROQ_API_KEY"]
+    if os.environ.get("_GROQ_API_KEY"):
+        key_names.append("_GROQ_API_KEY")
+    if os.environ.get("__GROQ_API_KEY"):
+        key_names.append("__GROQ_API_KEY")
+    content: str | None = None
+    last_error: Exception | None = None
+
+    for round_idx in range(2):  # duas rodadas de tentativas
+        for key_name in key_names:
+            api_key_try = os.environ.get(key_name)
+            if not api_key_try:
+                continue
+            try:
+                # Importar a biblioteca Groq apenas quando necessário
+                from groq import Groq  # type: ignore
+                client = Groq(api_key=api_key_try)
+                resp = client.chat.completions.create(
+                    model="openai/gpt-oss-120b",
+                    messages=[
+                        {"role": "system", "content": prompt_sistema},
+                        {"role": "user", "content": user_msg},
+                    ],
+                    temperature=0,
+                    max_tokens=4096,
+                    stream=False,
+                    response_format={"type": "json_object"},
+                )
+                content = (resp.choices[0].message.content or "{}").strip()
+                print(f"[LLM] Resposta bruta (JSON) com {key_name}: '{content}'", file=sys.stderr)
+                break  # sucesso nesta rodada
+            except Exception as e:
+                last_error = e
+                print(f"[LLM] ⚠️ Falha com chave {key_name}: {e}", file=sys.stderr)
+                continue
+        if content is not None:
+            break  # sucesso geral
+        if round_idx == 0:
+            print("[LLM] ⏳ Aguardando 4s antes da última tentativa com as chaves disponíveis...", file=sys.stderr)
+            time.sleep(4)
+
+    if content is None:
+        # Conforme pedido: após todas as tentativas, retornar erro de indisponibilidade da API key
+        return {"index": -1, "relatorio": {"erro": "API key da Groq não disponível"}}
+
+    # Processar o JSON retornado
     try:
-        # Importar a biblioteca Groq apenas quando necessário
-        from groq import Groq
-        
-        client = Groq(api_key=api_key)
-        resp = client.chat.completions.create(
-            # Usar um modelo mais recente e robusto, se disponível
-            #model="llama-3.3-70b-versatile", 
-            model="openai/gpt-oss-120b",
-            messages=[
-                {"role": "system", "content": prompt_sistema},
-                {"role": "user", "content": user_msg},
-            ],
-            temperature=0,
-            max_tokens=4096,
-            stream=False,
-            response_format={"type": "json_object"},
-        )
-        
-        content = (resp.choices[0].message.content or "{}").strip()
-        print(f"[LLM] Resposta bruta (JSON): '{content}'", file=sys.stderr)
-        
         data = json.loads(content)
-        
+
         # A lógica de validação pode ser mantida, pois é robusta
         idx = data.get("index", -1)
-        #idx = -1
         relatorio = data.get("relatorio", {})
         if not isinstance(idx, int):
-             return {"index": -1, "relatorio": {"erro": f"Índice inválido: {idx}"}}
-        
+            return {"index": -1, "relatorio": {"erro": f"Índice inválido: {idx}"}}
+
         if idx == -1:
             print("[LLM] ⚠️ LLM rejeitou todos os candidatos.", file=sys.stderr)
             return {"index": -1, "relatorio": relatorio or {"erro": "Nenhum candidato elegível."}}
@@ -188,7 +209,7 @@ def _llm_escolher_indice(query: str, filtros: dict | None, custo_beneficio: dict
         print(f"[LLM] ❌ Erro fatal ao fazer parse do JSON: {e}", file=sys.stderr)
         return {"index": -1, "relatorio": {"erro": f"JSON malformado: {e}"}}
     except Exception as e:
-        print(f"[LLM] ❌ Erro na chamada da API Groq: {e}", file=sys.stderr)
+        print(f"[LLM] ❌ Erro inesperado ao processar resposta da LLM: {e}", file=sys.stderr)
         return {"index": -1, "relatorio": {"erro": f"Erro na API: {e}"}}
 
 
