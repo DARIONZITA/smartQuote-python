@@ -12,6 +12,7 @@ import json
 from datetime import datetime, timedelta
 import traceback
 import logging
+import hashlib
 
 # Configurar o path para imports locais (sem dependência da API principal)
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -84,15 +85,72 @@ def _client_ip() -> str:
 @app.before_request
 def _log_incoming_request():
     try:
+        # Headers auxiliares para rastreio
+        xff_chain = request.headers.get('X-Forwarded-For')
+        x_request_id = request.headers.get('X-Request-Id') or request.headers.get('X-Request-ID')
+        x_client_service = request.headers.get('X-Client-Service')
+        auth_hdr = request.headers.get('Authorization')
+        auth_fp = None
+        if auth_hdr:
+            try:
+                # Hash do Authorization (sem vazar segredo)
+                auth_fp = hashlib.sha256(auth_hdr.encode('utf-8')).hexdigest()[:10]
+            except Exception:
+                auth_fp = 'err'
+
+        interp_id = None
+        if request.method == 'POST' and request.path.endswith('/process-interpretation'):
+            body = request.get_json(silent=True) or {}
+            interp = body.get('interpretation') if isinstance(body, dict) else None
+            if isinstance(interp, dict):
+                interp_id = interp.get('id')
+
+        # País/região via proxies comuns (Cloudflare, etc.)
+        cf_country = request.headers.get('CF-IPCountry') or request.headers.get('Cf-Ipcountry')
+        fly_region = request.headers.get('Fly-Region')
+        x_region = request.headers.get('X-Region')
+
+        # Identificação do cliente (label) via cabeçalho, fingerprint, ou IP conforme mapas em env
+        client_label = None
+        try:
+            # Mapa por fingerprint de Authorization (env JSON: {"<fp>": "label"})
+            authfp_map = json.loads(os.environ.get('REQUEST_AUTHFP_LABELS', '{}'))
+        except Exception:
+            authfp_map = {}
+        try:
+            # Mapa por IP (env JSON: {"1.2.3.4": "label"})
+            ip_map = json.loads(os.environ.get('REQUEST_IP_LABELS', '{}'))
+        except Exception:
+            ip_map = {}
+
+        ip_eff = _client_ip()
+        if x_client_service:
+            client_label = x_client_service
+        elif auth_fp and authfp_map.get(auth_fp):
+            client_label = authfp_map.get(auth_fp)
+        elif ip_map.get(ip_eff):
+            client_label = ip_map.get(ip_eff)
+        else:
+            ua_l = (request.headers.get('User-Agent') or '').lower()
+            client_label = 'axios-client' if 'axios' in ua_l else 'desconhecido'
+
         logger.info(
-            "↘️ %s %s | host=%s | ip=%s | referer=%s | origin=%s | ua=%s",
+            "↘️ %s %s | host=%s | ip=%s | xff=%s | referer=%s | origin=%s | ua=%s | x-request-id=%s | x-client=%s | auth#=%s | interp_id=%s | client=%s | country=%s | region=%s",
             request.method,
             request.url,
             request.host,
-            _client_ip(),
+            ip_eff,
+            xff_chain,
             request.headers.get('Referer'),
             request.headers.get('Origin'),
-            request.headers.get('User-Agent')
+            request.headers.get('User-Agent'),
+            x_request_id,
+            x_client_service,
+            auth_fp,
+            interp_id,
+            client_label,
+            cf_country,
+            fly_region or x_region,
         )
     except Exception as e:
         logger.warning(f"⚠️ Falha ao logar request: {e}")
