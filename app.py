@@ -70,6 +70,41 @@ weaviate_manager = None
 supabase_manager = None
 decomposer = None
 
+# Logging de requisições: URL acessada, origem (Referer/Origin) e IP
+def _client_ip() -> str:
+    try:
+        xff = request.headers.get('X-Forwarded-For')
+        if xff:
+            return xff.split(',')[0].strip()
+        xri = request.headers.get('X-Real-IP')
+        return xri or request.remote_addr or ""
+    except Exception:
+        return ""
+
+@app.before_request
+def _log_incoming_request():
+    try:
+        logger.info(
+            "↘️ %s %s | host=%s | ip=%s | referer=%s | origin=%s | ua=%s",
+            request.method,
+            request.url,
+            request.host,
+            _client_ip(),
+            request.headers.get('Referer'),
+            request.headers.get('Origin'),
+            request.headers.get('User-Agent')
+        )
+    except Exception as e:
+        logger.warning(f"⚠️ Falha ao logar request: {e}")
+
+@app.after_request
+def _log_outgoing_response(response):
+    try:
+        logger.info("↗️ %s %s %s", response.status_code, request.method, request.path)
+    except Exception:
+        pass
+    return response
+
 def executar_estrutura_de_queries(
     weaviate_manager: WeaviateManager, 
     estrutura: List[Dict[str, Any]], 
