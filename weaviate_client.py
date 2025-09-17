@@ -123,7 +123,7 @@ class WeaviateManager:
         print("A conectar ao Weaviate...")
         try:
             self.client = weaviate.connect_to_weaviate_cloud(
-                cluster_url="ylwtqkqjsfstdhecszyr5a.c0.us-west3.gcp.weaviate.cloud",  # URL do cluster no WCS
+                cluster_url=WEAVIATE_HOST,  # URL do cluster no WCS a partir da variável de ambiente
                 auth_credentials=wvc.init.Auth.api_key(API_KEY_WEAVIATE),
                 additional_config=wvc.init.AdditionalConfig(
                     timeout=wvc.init.Timeout(init=60, query=60, insert=180)
