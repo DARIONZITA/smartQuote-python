@@ -888,6 +888,33 @@ def health_check():
             "timestamp": datetime.now().isoformat()
         }), 500
 
+@app.route('/', methods=["GET", "HEAD"])
+def health_check():
+    """Endpoint de health check"""
+    try:
+        # Verificar se os managers estão funcionais
+        weaviate_status = weaviate_manager is not None and weaviate_manager.client is not None
+        supabase_status = supabase_manager is not None and supabase_manager.is_available()
+        decomposer_status = decomposer is not None
+        
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "services": {
+                "weaviate": weaviate_status,
+                "supabase": supabase_status,
+                "decomposer": decomposer_status
+            }
+        }), 200
+    except Exception as e:
+        logger.error(f"Health check error: {e}")
+        return jsonify({
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
+
 @app.route('/process-interpretation', methods=['POST'])
 def process_interpretation():
     """Processa uma interpretação de email e retorna resultados da busca"""
