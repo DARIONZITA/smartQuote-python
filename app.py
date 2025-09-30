@@ -889,7 +889,7 @@ def health_check():
         }), 500
 
 @app.route('/', methods=["GET", "HEAD"])
-def health_check():
+def root_health_check():
     """Endpoint de health check"""
     try:
         # Verificar se os managers estão funcionais
