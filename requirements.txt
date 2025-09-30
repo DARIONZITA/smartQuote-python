@@ -26,5 +26,12 @@ requests>=2.31.0
 # Logging and utilities
 python-dotenv>=1.0.0
 
+# WSGI server for production (Render recommends gunicorn)
+gunicorn>=20.1.0
+
+# Fix Protobuf version conflicts
+protobuf>=4.21.0,<5.0.0
+grpcio>=1.50.0,<2.0.0
+
 # Standard library (included in Python)
 # json, re, unicodedata, sys, os, warnings, datetime, argparse, enum

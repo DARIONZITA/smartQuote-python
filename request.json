@@ -1,0 +1,18 @@
+{
+  "interpretation": {
+    "id": "email-123",
+    "tipo": "cotacao",
+    "prioridade": "alta",
+    "confianca": 0.95,
+    "cliente": "Empresa XYZ",
+    "emailId": "abc123",
+    "solicitacao": "Preciso de 10 notebooks Dell para escritório, com entrega rápida.",
+    "dados_bruto": "Texto original do e-mail...",
+    "fonte": {
+      "nome": "Cotação notebooks"
+    }
+  },
+  "limite": 5,
+  "usar_multilingue": true,
+  "criar_cotacao": true
+}
