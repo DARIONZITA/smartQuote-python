@@ -1167,10 +1167,11 @@ def initialize_services():
         logger.error(f"❌ Erro ao inicializar serviços: {e}")
         raise
 
+# Inicializar serviços quando o módulo for carregado (para Gunicorn, Flask CLI, etc.)
+initialize_services()
+
 if __name__ == '__main__':
     try:
-        initialize_services()
-        
         # Se estiver no Render, ele define $PORT. Caso contrário, use suas variáveis locais
         port = int(os.environ.get('PORT', os.environ.get('PYTHON_API_PORT', 5001)))
         host = '0.0.0.0' if 'PORT' in os.environ else os.environ.get('PYTHON_API_HOST', '127.0.0.1')
