@@ -42,15 +42,12 @@ class HuggingFaceEmbeddingClient:
             print(f"Conectando à API do Hugging Face... (space: {self.space_name})")
             hf_token = os.environ.get("HUGGINGFACE_TOKEN")
             
-            # Configurar httpx com timeout maior para evitar falhas na inicialização
-            import httpx
-            httpx_kwargs = {"timeout": httpx.Timeout(timeout=timeout, connect=10.0)}
-            
-            # Se houver token, utiliza para reduzir problemas de rate/latência
+            # Criar cliente sem parâmetros httpx customizados inicialmente
+            # O gradio_client gerencia seus próprios timeouts internamente
             if hf_token:
-                self.client = Client(self.space_name, hf_token=hf_token, **httpx_kwargs)
+                self.client = Client(self.space_name, hf_token=hf_token)
             else:
-                self.client = Client(self.space_name, **httpx_kwargs)
+                self.client = Client(self.space_name)
             
             print("✅ Conectado à API do Hugging Face")
         except Exception as e:
