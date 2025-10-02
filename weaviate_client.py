@@ -36,13 +36,22 @@ class HuggingFaceEmbeddingClient:
         self.max_retries = int(os.environ.get("EMBEDDING_MAX_RETRIES", max_retries or 3))
         self.backoff_seconds = float(os.environ.get("EMBEDDING_RETRY_BACKOFF", backoff_seconds or 2.0))
         
-    def connect(self):
-        """Conecta ao cliente da API do Hugging Face"""
+    def connect(self, timeout: int = 30):
+        """Conecta ao cliente da API do Hugging Face com timeout configurável"""
         try:
             print(f"Conectando à API do Hugging Face... (space: {self.space_name})")
             hf_token = os.environ.get("HUGGINGFACE_TOKEN")
+            
+            # Configurar httpx com timeout maior para evitar falhas na inicialização
+            import httpx
+            httpx_kwargs = {"timeout": httpx.Timeout(timeout=timeout, connect=10.0)}
+            
             # Se houver token, utiliza para reduzir problemas de rate/latência
-            self.client = Client(self.space_name, hf_token=hf_token) if hf_token else Client(self.space_name)
+            if hf_token:
+                self.client = Client(self.space_name, hf_token=hf_token, **httpx_kwargs)
+            else:
+                self.client = Client(self.space_name, **httpx_kwargs)
+            
             print("✅ Conectado à API do Hugging Face")
         except Exception as e:
             print(f"❌ Erro ao conectar à API do Hugging Face: {e}")
@@ -137,11 +146,22 @@ class WeaviateManager:
         print("Inicializando cliente de embeddings da API Hugging Face...")
         try:
             self.embedding_client = HuggingFaceEmbeddingClient()
-            self.embedding_client.connect()
-            print("✅ Cliente de embeddings inicializado com sucesso")
+            # Lazy init: não conectar agora, apenas quando necessário
+            print("⏳ Cliente de embeddings será inicializado sob demanda")
         except Exception as e:
-            print(f"❌ Falha ao inicializar cliente de embeddings: {e}")
+            print(f"❌ Falha ao criar cliente de embeddings: {e}")
             raise
+    
+    def _ensure_embedding_client(self):
+        """Garante que o cliente de embeddings está conectado (lazy initialization)"""
+        if self.embedding_client and not self.embedding_client.client:
+            try:
+                print("🔗 Conectando cliente de embeddings (primeira vez)...")
+                self.embedding_client.connect(timeout=60)  # Timeout maior
+                print("✅ Cliente de embeddings pronto")
+            except Exception as e:
+                print(f"⚠️ Falha ao conectar embedding client: {e}")
+                raise Exception(f"Não foi possível inicializar cliente de embeddings: {e}")
         
     def definir_schema(self):
         """Cria a classe 'Produtos' com vetores baseada nos dados do Supabase."""
@@ -211,6 +231,9 @@ class WeaviateManager:
         preco = float(dados_produto.get('preco', 0)) if dados_produto.get('preco') else 0.0
         estoque = int(dados_produto.get('estoque', 0)) if dados_produto.get('estoque') else 0
         if not objeto_existente:
+            # Garantir que o cliente de embeddings está pronto (lazy init)
+            self._ensure_embedding_client()
+            
             texto_para_embedding = f"Nome: {nome}. Categoria: {categoria}. Tags: {', '.join(tags_array)}. Descrição: {descricao}"
             
             # Gerar embeddings usando a API do Hugging Face
@@ -251,6 +274,9 @@ class WeaviateManager:
             atual.get("estoque", 0) != estoque
         )
         if mudou_texto:
+            # Garantir que o cliente de embeddings está pronto (lazy init)
+            self._ensure_embedding_client()
+            
             texto_para_embedding = f"Nome: {nome}. Categoria: {categoria}. Tags: {', '.join(tags_array)}. Descrição: {descricao}"
             
             # Gerar embeddings usando a API do Hugging Face
