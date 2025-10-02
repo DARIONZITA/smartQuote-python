@@ -66,7 +66,8 @@ class HuggingFaceEmbeddingClient:
             Lista de floats representando o embedding
         """
         if not self.client:
-            raise Exception("Cliente não conectado. Chame connect() primeiro.")
+            print("🔄 Conectando ao cliente de embeddings (inicialização lazy)...")
+            self.connect()
             
         last_exc: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
