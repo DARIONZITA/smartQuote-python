@@ -33,8 +33,10 @@ class HuggingFaceEmbeddingClient:
         # Permite configurar o Space via variável de ambiente HUGGINGFACE_SPACE
         self.space_name = space_name or os.environ.get("HUGGINGFACE_SPACE", "dnzita/smartquote")
         # Configura tentativas e backoff via env se disponível
-        self.max_retries = int(os.environ.get("EMBEDDING_MAX_RETRIES", max_retries or 3))
-        self.backoff_seconds = float(os.environ.get("EMBEDDING_RETRY_BACKOFF", backoff_seconds or 2.0))
+        self.max_retries = int(os.environ.get("EMBEDDING_MAX_RETRIES", max_retries or 5))
+        self.backoff_seconds = float(os.environ.get("EMBEDDING_RETRY_BACKOFF", backoff_seconds or 3.0))
+        # Timeout configurável para operações de embedding
+        self.embedding_timeout = int(os.environ.get("EMBEDDING_TIMEOUT", 120))
         
     def connect(self, timeout: int = 30):
         """Conecta ao cliente da API do Hugging Face com timeout configurável"""
@@ -72,11 +74,17 @@ class HuggingFaceEmbeddingClient:
         last_exc: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
             try:
+                print(f"🔍 Tentando gerar embedding (tentativa {attempt}/{self.max_retries}, timeout={self.timeout}s)...")
+                start_time = time.time()
+                
                 result = self.client.predict(
                     texts=text,
                     model_choice=model_choice,
                     api_name="/predict"
                 )
+                
+                elapsed = time.time() - start_time
+                print(f"✅ Embedding gerado com sucesso em {elapsed:.2f}s")
 
                 # Gradio retorna [[...]] para um texto, precisa "achatar"
                 if isinstance(result, list) and len(result) > 0:
@@ -90,31 +98,44 @@ class HuggingFaceEmbeddingClient:
 
             except Exception as e:
                 last_exc = e
+                elapsed = time.time() - start_time
                 msg = str(e).lower()
-                transient = any(t in msg for t in [
-                    "handshake",
-                    "timeout",
+                
+                # Detecta tipo de erro
+                is_timeout = "timeout" in msg or "timed out" in msg
+                is_connection = any(t in msg for t in ["connection", "handshake", "reset", "aborted"])
+                transient = is_timeout or is_connection or any(t in msg for t in [
                     "temporarily unavailable",
                     "temporary failure",
                     "max retries",
-                    "connection reset",
-                    "connection aborted",
                 ])
-                print(f"⚠️ Falha ao gerar embedding (tentativa {attempt}/{self.max_retries}): {e}")
+                
+                error_type = "⏱️ TIMEOUT" if is_timeout else "🔌 CONEXÃO" if is_connection else "❌ ERRO"
+                print(f"{error_type} ao gerar embedding após {elapsed:.2f}s (tentativa {attempt}/{self.max_retries}): {e}")
+                
                 if attempt < self.max_retries and transient:
                     # Recria o cliente e espera com backoff exponencial
+                    print(f"🔄 Reconectando ao HuggingFace Space {self.space_name}...")
                     try:
+                        self.client = None  # Força reconexão completa
                         self.connect()
-                    except Exception:
-                        # já houve log no connect()
-                        pass
+                    except Exception as conn_err:
+                        print(f"⚠️ Falha ao reconectar: {conn_err}")
+                    
                     sleep_s = self.backoff_seconds * (2 ** (attempt - 1))
-                    time.sleep(min(sleep_s, 15))
+                    actual_sleep = min(sleep_s, 15)
+                    print(f"⏸️ Aguardando {actual_sleep:.1f}s antes da próxima tentativa...")
+                    time.sleep(actual_sleep)
                     continue
                 # Sem retries restantes ou erro não transitório
                 break
 
-        print(f"❌ Erro ao gerar embedding: {last_exc}")
+        error_summary = f"Falha após {self.max_retries} tentativas"
+        if last_exc:
+            if "timeout" in str(last_exc).lower():
+                error_summary += f" - HuggingFace API não respondeu dentro de {self.timeout}s. Considere: 1) Aumentar EMBEDDING_TIMEOUT, 2) Verificar status do Space {self.space_name}, 3) Usar modelo alternativo."
+        
+        print(f"❌ {error_summary}")
         raise last_exc if last_exc else Exception("Falha desconhecida ao gerar embedding")
 
 class WeaviateManager:
