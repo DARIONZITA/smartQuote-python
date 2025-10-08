@@ -75,7 +75,7 @@ class HuggingFaceEmbeddingClient:
         for attempt in range(1, self.max_retries + 1):
             start_time = time.time()  # Definir antes do try para estar disponível no except
             try:
-                print(f"🔍 Tentando gerar embedding (tentativa {attempt}/{self.max_retries}, timeout={self.timeout}s)...")
+                print(f"🔍 Tentando gerar embedding (tentativa {attempt}/{self.max_retries}, timeout={self.embedding_timeout}s)...")
                 
                 result = self.client.predict(
                     texts=text,
@@ -133,7 +133,7 @@ class HuggingFaceEmbeddingClient:
         error_summary = f"Falha após {self.max_retries} tentativas"
         if last_exc:
             if "timeout" in str(last_exc).lower():
-                error_summary += f" - HuggingFace API não respondeu dentro de {self.timeout}s. Considere: 1) Aumentar EMBEDDING_TIMEOUT, 2) Verificar status do Space {self.space_name}, 3) Usar modelo alternativo."
+                error_summary += f" - HuggingFace API não respondeu dentro de {self.embedding_timeout}s. Considere: 1) Aumentar EMBEDDING_TIMEOUT, 2) Verificar status do Space {self.space_name}, 3) Usar modelo alternativo."
         
         print(f"❌ {error_summary}")
         raise last_exc if last_exc else Exception("Falha desconhecida ao gerar embedding")
