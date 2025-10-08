@@ -601,17 +601,20 @@ def processar_interpretacao(
             "query_sugerida": query_sugerida or None,
         })
 
+    # Extrair metadados se interpretation for dicionário
+    interpretation_dict = interpretation if isinstance(interpretation, dict) else {}
+    
     saida: Dict[str, Any] = {
         "status": "success",
         "processed_at": datetime.now().isoformat(),
-        "email_id": interpretation.get("emailId"),
-        "interpretation_id": interpretation.get("id"),
-        "tipo": interpretation.get("tipo"),
-        "prioridade": interpretation.get("prioridade"),
-        "confianca": interpretation.get("confianca"),
+        "email_id": interpretation_dict.get("emailId"),
+        "interpretation_id": interpretation_dict.get("id"),
+        "tipo": interpretation_dict.get("tipo"),
+        "prioridade": interpretation_dict.get("prioridade"),
+        "confianca": interpretation_dict.get("confianca"),
         "dados_extraidos": brief,
-        "cliente": interpretation.get("cliente"),
-        "dados_bruto": interpretation.get("dados_bruto"),
+        "cliente": interpretation_dict.get("cliente"),
+        "dados_bruto": interpretation_dict.get("dados_bruto"),
         "faltantes": tarefas_web,
         "resultado_resumo": _resumo_resultados(resultados, limite_resultados),
         "metricas_busca": metricas_fases,
@@ -625,9 +628,9 @@ def processar_interpretacao(
         prompt_id = cotacao_manager.insert_prompt(
             texto_original=solicitacao,
             dados_extraidos=brief,
-            cliente=interpretation.get("cliente"),
-            dados_bruto=interpretation.get("dados_bruto"),
-            origem={"tipo": "api", "interpretation_id": interpretation.get("id")},
+            cliente=interpretation_dict.get("cliente"),
+            dados_bruto=interpretation_dict.get("dados_bruto"),
+            origem={"tipo": "api", "interpretation_id": interpretation_dict.get("id")},
             status="analizado",
         )
         if not prompt_id:
