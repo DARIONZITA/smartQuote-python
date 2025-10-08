@@ -73,9 +73,9 @@ class HuggingFaceEmbeddingClient:
             
         last_exc: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
+            start_time = time.time()  # Definir antes do try para estar disponível no except
             try:
                 print(f"🔍 Tentando gerar embedding (tentativa {attempt}/{self.max_retries}, timeout={self.timeout}s)...")
-                start_time = time.time()
                 
                 result = self.client.predict(
                     texts=text,
