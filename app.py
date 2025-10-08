@@ -5,7 +5,7 @@ API Flask Independente para Sistema de Busca Local - smartQuote    modelos = wea
 import warnings
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 import os
 import sys
 import json
@@ -499,7 +499,7 @@ def executar_busca_duas_fases(
     return resultados_finais, faltantes_finais, metricas
 
 def processar_interpretacao(
-    interpretation: Dict[str, Any],
+    interpretation: Union[str, Dict[str, Any]],
     limite_resultados: int = LIMITE_PADRAO_RESULTADOS,
     usar_multilingue: bool = True,
     criar_cotacao: bool = False,
@@ -510,8 +510,12 @@ def processar_interpretacao(
     """
     global weaviate_manager, supabase_manager, decomposer
     
-    # Campos básicos
-    solicitacao = (interpretation or {}).get("solicitacao")
+    # Campos básicos - aceita string direta ou dicionário com campo 'solicitacao'
+    if isinstance(interpretation, str):
+        solicitacao = interpretation
+    else:
+        solicitacao = (interpretation or {}).get("solicitacao")
+        
     if not solicitacao:
         raise ValueError("Campo 'solicitacao' ausente na interpretação fornecida")
 
