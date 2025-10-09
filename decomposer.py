@@ -199,7 +199,7 @@ class SolutionDecomposer:
         try:
             print("🔌 TESTANDO CONEXÃO COM GROQ API...")
             test_result = self.groq_client.chat.completions.create(
-                model="gemma2-9b-it",
+                model="llama-3.1-8b-instant",
                 response_model=DecompositionResult,
                 messages=[
                     {"role": "user", "content": "Decomponha esta solicitação simples: preciso de um computador"}
